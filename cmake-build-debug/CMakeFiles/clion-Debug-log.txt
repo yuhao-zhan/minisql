@@ -1,0 +1,203 @@
+/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/Applications/CLion.app/Contents/bin/ninja/mac/aarch64/ninja -G Ninja -S /Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql -B /Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug
+-- The C compiler identification is AppleClang 15.0.0.15000100
+-- The CXX compiler identification is AppleClang 15.0.0.15000100
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /Library/Developer/CommandLineTools/usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /Library/Developer/CommandLineTools/usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+CMake Warning at CMakeLists.txt:25 (MESSAGE):
+  Could NOT find clang-format.
+
+
+CMake Deprecation Warning at thirdparty/googletest/CMakeLists.txt:13 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+
+
+CMake Deprecation Warning at thirdparty/googletest/CMakeLists.txt:79 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+
+
+-- Found Python: /opt/homebrew/Frameworks/Python.framework/Versions/3.13/bin/python3.13 (found version "3.13.2") found components: Interpreter 
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+CMake Deprecation Warning at thirdparty/glog/cmake/GetCacheVariables.cmake:2 (cmake_policy):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+Call Stack (most recent call first):
+  thirdparty/glog/CMakeLists.txt:34 (include)
+
+
+-- Looking for gflags namespace
+-- Looking for gflags namespace - gflags
+-- Could NOT find Unwind (missing: Unwind_LIBRARY) 
+-- Looking for C++ include unwind.h
+-- Looking for C++ include unwind.h - found
+-- Looking for _Unwind_Backtrace
+-- Looking for _Unwind_Backtrace - found
+-- Looking for C++ include dlfcn.h
+-- Looking for C++ include dlfcn.h - found
+-- Looking for C++ include execinfo.h
+-- Looking for C++ include execinfo.h - found
+-- Looking for C++ include glob.h
+-- Looking for C++ include glob.h - found
+-- Looking for C++ include inttypes.h
+-- Looking for C++ include inttypes.h - found
+-- Looking for C++ include memory.h
+-- Looking for C++ include memory.h - found
+-- Looking for C++ include pwd.h
+-- Looking for C++ include pwd.h - found
+-- Looking for C++ include stdint.h
+-- Looking for C++ include stdint.h - found
+-- Looking for C++ include strings.h
+-- Looking for C++ include strings.h - found
+-- Looking for C++ include sys/stat.h
+-- Looking for C++ include sys/stat.h - found
+-- Looking for C++ include sys/syscall.h
+-- Looking for C++ include sys/syscall.h - found
+-- Looking for C++ include sys/time.h
+-- Looking for C++ include sys/time.h - found
+-- Looking for C++ include sys/types.h
+-- Looking for C++ include sys/types.h - found
+-- Looking for C++ include sys/utsname.h
+-- Looking for C++ include sys/utsname.h - found
+-- Looking for C++ include sys/wait.h
+-- Looking for C++ include sys/wait.h - found
+-- Looking for C++ include syscall.h
+-- Looking for C++ include syscall.h - not found
+-- Looking for C++ include syslog.h
+-- Looking for C++ include syslog.h - found
+-- Looking for C++ include ucontext.h
+-- Looking for C++ include ucontext.h - not found
+-- Looking for C++ include unistd.h
+-- Looking for C++ include unistd.h - found
+-- Looking for C++ include ext/hash_map
+-- Looking for C++ include ext/hash_map - found
+-- Looking for C++ include ext/hash_set
+-- Looking for C++ include ext/hash_set - found
+-- Looking for C++ include ext/slist
+-- Looking for C++ include ext/slist - not found
+-- Looking for C++ include tr1/unordered_map
+-- Looking for C++ include tr1/unordered_map - not found
+-- Looking for C++ include tr1/unordered_set
+-- Looking for C++ include tr1/unordered_set - not found
+-- Looking for C++ include unordered_map
+-- Looking for C++ include unordered_map - found
+-- Looking for C++ include unordered_set
+-- Looking for C++ include unordered_set - found
+-- Looking for C++ include stddef.h
+-- Looking for C++ include stddef.h - found
+-- Check size of unsigned __int16
+-- Check size of unsigned __int16 - failed
+-- Check size of u_int16_t
+-- Check size of u_int16_t - done
+-- Check size of uint16_t
+-- Check size of uint16_t - done
+-- Looking for dladdr
+-- Looking for dladdr - found
+-- Looking for fcntl
+-- Looking for fcntl - found
+-- Looking for pread
+-- Looking for pread - found
+-- Looking for pwrite
+-- Looking for pwrite - found
+-- Looking for sigaction
+-- Looking for sigaction - found
+-- Looking for sigaltstack
+-- Looking for sigaltstack - found
+-- Performing Test HAVE_NO_DEPRECATED
+-- Performing Test HAVE_NO_DEPRECATED - Success
+-- Performing Test HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS
+-- Performing Test HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS - Success
+-- Looking for pthread_threadid_np
+-- Looking for pthread_threadid_np - found
+-- Looking for snprintf
+-- Looking for snprintf - found
+-- Looking for UnDecorateSymbolName in dbghelp
+-- Looking for UnDecorateSymbolName in dbghelp - not found
+-- Performing Test HAVE___ATTRIBUTE__
+-- Performing Test HAVE___ATTRIBUTE__ - Success
+-- Performing Test HAVE___ATTRIBUTE__VISIBILITY_DEFAULT
+-- Performing Test HAVE___ATTRIBUTE__VISIBILITY_DEFAULT - Success
+-- Performing Test HAVE___ATTRIBUTE__VISIBILITY_HIDDEN
+-- Performing Test HAVE___ATTRIBUTE__VISIBILITY_HIDDEN - Success
+-- Performing Test HAVE___BUILTIN_EXPECT
+-- Performing Test HAVE___BUILTIN_EXPECT - Success
+-- Performing Test HAVE___SYNC_VAL_COMPARE_AND_SWAP
+-- Performing Test HAVE___SYNC_VAL_COMPARE_AND_SWAP - Success
+-- Performing Test HAVE_RWLOCK
+-- Performing Test HAVE_RWLOCK - Success
+-- Performing Test HAVE___DECLSPEC
+-- Performing Test HAVE___DECLSPEC - Failed
+-- Performing Test STL_NO_NAMESPACE
+-- Performing Test STL_NO_NAMESPACE - Failed
+-- Performing Test STL_STD_NAMESPACE
+-- Performing Test STL_STD_NAMESPACE - Success
+-- Performing Test HAVE_USING_OPERATOR
+-- Performing Test HAVE_USING_OPERATOR - Success
+-- Performing Test HAVE_NAMESPACES
+-- Performing Test HAVE_NAMESPACES - Success
+-- Performing Test HAVE_GCC_TLS
+-- Performing Test HAVE_GCC_TLS - Success
+-- Performing Test HAVE_MSVC_TLS
+-- Performing Test HAVE_MSVC_TLS - Failed
+-- Performing Test HAVE_CXX11_TLS
+-- Performing Test HAVE_CXX11_TLS - Failed
+-- Performing Test HAVE_ALIGNED_STORAGE
+-- Performing Test HAVE_ALIGNED_STORAGE - Failed
+-- Performing Test HAVE_CXX11_ATOMIC
+-- Performing Test HAVE_CXX11_ATOMIC - Success
+-- Performing Test HAVE_CXX11_CONSTEXPR
+-- Performing Test HAVE_CXX11_CONSTEXPR - Failed
+-- Performing Test HAVE_CXX11_CHRONO
+-- Performing Test HAVE_CXX11_CHRONO - Success
+-- Performing Test HAVE_CXX11_NULLPTR_T
+-- Performing Test HAVE_CXX11_NULLPTR_T - Success
+-- Performing Test HAVE_LOCALTIME_R
+-- Performing Test HAVE_LOCALTIME_R - Success
+-- Performing Test COMPILER_HAS_HIDDEN_VISIBILITY
+-- Performing Test COMPILER_HAS_HIDDEN_VISIBILITY - Success
+-- Performing Test COMPILER_HAS_HIDDEN_INLINE_VISIBILITY
+-- Performing Test COMPILER_HAS_HIDDEN_INLINE_VISIBILITY - Success
+-- Performing Test COMPILER_HAS_DEPRECATED_ATTR
+-- Performing Test COMPILER_HAS_DEPRECATED_ATTR - Success
+-- For macOS 10.x, you need to set ASAN_OPTIONS=detect_leaks=1 to detect memory leak.
+-- Source file lists: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/buffer/buffer_pool_manager.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/buffer/lru_replacer.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/catalog/catalog.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/catalog/indexes.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/catalog/table.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/common/instance.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/concurrency/lock_manager.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/concurrency/txn_manager.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/executor/delete_executor.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/executor/execute_engine.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/executor/index_scan_executor.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/executor/insert_executor.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/executor/seq_scan_executor.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/executor/update_executor.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/executor/values_executor.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/index/b_plus_tree.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/index/b_plus_tree_index.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/index/index_iterator.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/page/b_plus_tree_internal_page.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/page/b_plus_tree_leaf_page.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/page/b_plus_tree_page.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/page/bitmap_page.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/page/header_page.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/page/index_roots_page.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/page/table_page.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/parser/minisql_lex.c;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/parser/minisql_yacc.c;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/parser/parser.c;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/parser/syntax_tree.c;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/parser/syntax_tree_printer.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/planner/planner.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/record/column.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/record/row.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/record/schema.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/record/types.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/storage/disk_manager.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/storage/table_heap.cpp;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/src/storage/table_iterator.cpp
+-- Create test suit: buffer_pool_manager_test
+-- Create test suit: lru_replacer_test
+-- Create test suit: catalog_test
+-- Create test suit: lock_manager_test
+-- Create test suit: executor_test
+-- Create test suit: b_plus_tree_index_test
+-- Create test suit: b_plus_tree_test
+-- Create test suit: index_iterator_test
+-- Create test suit: index_roots_page_test
+-- Create test suit: tuple_test
+-- Create test suit: recovery_manager_test
+-- Create test suit: disk_manager_test
+-- Create test suit: table_heap_test
+-- CMAKE_BUILD_TYPE: Debug
+-- CMAKE_CXX_FLAGS:   -std=gnu++11 -fPIC -Wall -Wextra -Wattributes -Wunused-parameter
+-- CMAKE_CXX_FLAGS_DEBUG: -g -O0 -ggdb -fno-omit-frame-pointer -fno-optimize-sibling-calls
+-- CMAKE_CXX_FLAGS_RELEASE: -O3 -DNDEBUG
+-- CMAKE_BINARY_DIR: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug
+-- Configuring done (7.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug

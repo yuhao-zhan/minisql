@@ -1,4 +1,4 @@
-# Install script for directory: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql
+# Install script for directory: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -39,22 +39,22 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/googletest-build/cmake_install.cmake")
+  include("/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/googletest-build/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/cmake_install.cmake")
+  include("/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/bin/cmake_install.cmake")
+  include("/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/bin/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/test/cmake_install.cmake")
+  include("/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/test/cmake_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
@@ -65,5 +65,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

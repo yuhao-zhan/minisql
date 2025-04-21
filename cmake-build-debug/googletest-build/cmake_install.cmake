@@ -1,4 +1,4 @@
-# Install script for directory: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/thirdparty/googletest
+# Install script for directory: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/thirdparty/googletest
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -41,7 +41,7 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/cmake/GTest/GTestTargets.cmake")
     file(DIFFERENT _cmake_export_file_changed FILES
          "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/cmake/GTest/GTestTargets.cmake"
-         "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/googletest-build/CMakeFiles/Export/0c08b8e77dd885bfe55a19a9659d9fc1/GTestTargets.cmake")
+         "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/googletest-build/CMakeFiles/Export/0c08b8e77dd885bfe55a19a9659d9fc1/GTestTargets.cmake")
     if(_cmake_export_file_changed)
       file(GLOB _cmake_old_config_files "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/cmake/GTest/GTestTargets-*.cmake")
       if(_cmake_old_config_files)
@@ -54,25 +54,25 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
     endif()
     unset(_cmake_export_file_changed)
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/GTest" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/googletest-build/CMakeFiles/Export/0c08b8e77dd885bfe55a19a9659d9fc1/GTestTargets.cmake")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/GTest" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/googletest-build/CMakeFiles/Export/0c08b8e77dd885bfe55a19a9659d9fc1/GTestTargets.cmake")
   if(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Dd][Ee][Bb][Uu][Gg])$")
-    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/GTest" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/googletest-build/CMakeFiles/Export/0c08b8e77dd885bfe55a19a9659d9fc1/GTestTargets-debug.cmake")
+    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/GTest" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/googletest-build/CMakeFiles/Export/0c08b8e77dd885bfe55a19a9659d9fc1/GTestTargets-debug.cmake")
   endif()
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/GTest" TYPE FILE FILES
-    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/googletest-build/generated/GTestConfigVersion.cmake"
-    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/googletest-build/generated/GTestConfig.cmake"
+    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/googletest-build/generated/GTestConfigVersion.cmake"
+    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/googletest-build/generated/GTestConfig.cmake"
     )
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include" TYPE DIRECTORY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/thirdparty/googletest/include/")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include" TYPE DIRECTORY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/thirdparty/googletest/include/")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/lib/libgtestd.1.11.0.dylib")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/lib/libgtestd.1.11.0.dylib")
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libgtestd.1.11.0.dylib" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libgtestd.1.11.0.dylib")
     execute_process(COMMAND "/opt/anaconda3/bin/install_name_tool"
@@ -85,16 +85,16 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/lib/libgtestd.dylib")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/lib/libgtestd.dylib")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/lib/libgtest_maind.1.11.0.dylib")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/lib/libgtest_maind.1.11.0.dylib")
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libgtest_maind.1.11.0.dylib" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libgtest_maind.1.11.0.dylib")
     execute_process(COMMAND "/opt/anaconda3/bin/install_name_tool"
       -id "libgtest_maind.1.11.0.dylib"
-      -change "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/lib/libgtestd.1.11.0.dylib" "libgtestd.1.11.0.dylib"
+      -change "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/lib/libgtestd.1.11.0.dylib" "libgtestd.1.11.0.dylib"
       "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libgtest_maind.1.11.0.dylib")
     if(CMAKE_INSTALL_DO_STRIP)
       execute_process(COMMAND "/Library/Developer/CommandLineTools/usr/bin/strip" -x "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libgtest_maind.1.11.0.dylib")
@@ -103,14 +103,14 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/lib/libgtest_maind.dylib")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/lib/libgtest_maind.dylib")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/googletest-build/generated/gtest.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/googletest-build/generated/gtest.pc")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/googletest-build/generated/gtest_main.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/googletest-build/generated/gtest_main.pc")
 endif()
 

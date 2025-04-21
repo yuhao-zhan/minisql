@@ -1,0 +1,14 @@
+Log file created at: 2025/04/21 23:37:22
+Running on machine: zhanyuxiaodeMacBook-Air.local
+Running duration (h:mm:ss): 0:00:00
+Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg
+E20250421 23:37:22.671599 17208663 cleanup_with_absolute_prefix_unittest.cc:68] cleanup test
+E20250421 23:37:22.672693 17208663 cleanup_with_absolute_prefix_unittest.cc:68] cleanup test
+E20250421 23:37:22.672708 17208663 cleanup_with_absolute_prefix_unittest.cc:68] cleanup test
+E20250421 23:37:22.672719 17208663 cleanup_with_absolute_prefix_unittest.cc:68] cleanup test
+E20250421 23:37:22.672729 17208663 cleanup_with_absolute_prefix_unittest.cc:68] cleanup test
+E20250421 23:37:22.672739 17208663 cleanup_with_absolute_prefix_unittest.cc:68] cleanup test
+E20250421 23:37:22.672749 17208663 cleanup_with_absolute_prefix_unittest.cc:68] cleanup test
+E20250421 23:37:22.672760 17208663 cleanup_with_absolute_prefix_unittest.cc:68] cleanup test
+E20250421 23:37:22.672770 17208663 cleanup_with_absolute_prefix_unittest.cc:68] cleanup test
+E20250421 23:37:22.672778 17208663 cleanup_with_absolute_prefix_unittest.cc:68] cleanup test

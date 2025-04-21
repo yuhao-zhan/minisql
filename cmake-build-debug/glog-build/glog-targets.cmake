@@ -50,15 +50,15 @@ unset(_cmake_expected_targets)
 add_library(glog::glog SHARED IMPORTED)
 
 set_target_properties(glog::glog PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/thirdparty/glog/src"
+  INTERFACE_INCLUDE_DIRECTORIES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build;/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/thirdparty/glog/src"
   INTERFACE_LINK_LIBRARIES "gflags"
 )
 
 # Import target "glog::glog" for configuration "Debug"
 set_property(TARGET glog::glog APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
 set_target_properties(glog::glog PROPERTIES
-  IMPORTED_LOCATION_DEBUG "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/libglogd.0.6.0.dylib"
-  IMPORTED_SONAME_DEBUG "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/libglogd.1.dylib"
+  IMPORTED_LOCATION_DEBUG "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/libglogd.0.6.0.dylib"
+  IMPORTED_SONAME_DEBUG "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/libglogd.1.dylib"
   )
 
 # This file does not depend on other imported targets which have

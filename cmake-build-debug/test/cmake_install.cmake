@@ -1,4 +1,4 @@
-# Install script for directory: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/test
+# Install script for directory: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/test
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

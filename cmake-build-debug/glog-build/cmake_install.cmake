@@ -1,4 +1,4 @@
-# Install script for directory: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/thirdparty/glog
+# Install script for directory: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/thirdparty/glog
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -39,8 +39,8 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES
-    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/libglogd.0.6.0.dylib"
-    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/libglogd.1.dylib"
+    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/libglogd.0.6.0.dylib"
+    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/libglogd.1.dylib"
     )
   foreach(file
       "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libglogd.0.6.0.dylib"
@@ -62,23 +62,23 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/libglogd.dylib")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/libglogd.dylib")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include/glog" TYPE FILE FILES
-    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/glog/export.h"
-    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/glog/logging.h"
-    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/glog/raw_logging.h"
-    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/glog/stl_logging.h"
-    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/glog/vlog_is_on.h"
-    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/thirdparty/glog/src/glog/log_severity.h"
-    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/thirdparty/glog/src/glog/platform.h"
+    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/glog/export.h"
+    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/glog/logging.h"
+    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/glog/raw_logging.h"
+    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/glog/stl_logging.h"
+    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/glog/vlog_is_on.h"
+    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/thirdparty/glog/src/glog/log_severity.h"
+    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/thirdparty/glog/src/glog/platform.h"
     )
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/libglog.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/libglog.pc")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Development" OR NOT CMAKE_INSTALL_COMPONENT)
@@ -90,10 +90,10 @@ if (NOT IS_ABSOLUTE lib/cmake/glog)
   set (glog_DATADIR_DESTINATION "${CMAKE_INSTALL_PREFIX}/${glog_DATADIR_DESTINATION}")
 endif (NOT IS_ABSOLUTE lib/cmake/glog)
 
-configure_file ("/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/thirdparty/glog/glog-modules.cmake.in"
-  "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/CMakeFiles/CMakeTmp/glog-modules.cmake" @ONLY)
+configure_file ("/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/thirdparty/glog/glog-modules.cmake.in"
+  "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/CMakeFiles/CMakeTmp/glog-modules.cmake" @ONLY)
 file (INSTALL
-  "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/CMakeFiles/CMakeTmp/glog-modules.cmake"
+  "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/CMakeFiles/CMakeTmp/glog-modules.cmake"
   DESTINATION
   "${glog_DATADIR_DESTINATION}")
 
@@ -101,20 +101,20 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/glog" TYPE FILE FILES
-    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/glog-config.cmake"
-    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/glog-config-version.cmake"
+    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/glog-config.cmake"
+    "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/glog-config-version.cmake"
     )
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Development" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/glog" TYPE DIRECTORY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/share/glog/cmake" FILES_MATCHING REGEX "/[^/]*\\.cmake$")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/glog" TYPE DIRECTORY FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/share/glog/cmake" FILES_MATCHING REGEX "/[^/]*\\.cmake$")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/cmake/glog/glog-targets.cmake")
     file(DIFFERENT _cmake_export_file_changed FILES
          "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/cmake/glog/glog-targets.cmake"
-         "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/CMakeFiles/Export/3b58dfe2d8c90c3a489d71c8991c4dd3/glog-targets.cmake")
+         "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/CMakeFiles/Export/3b58dfe2d8c90c3a489d71c8991c4dd3/glog-targets.cmake")
     if(_cmake_export_file_changed)
       file(GLOB _cmake_old_config_files "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/cmake/glog/glog-targets-*.cmake")
       if(_cmake_old_config_files)
@@ -127,9 +127,9 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
     endif()
     unset(_cmake_export_file_changed)
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/glog" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/CMakeFiles/Export/3b58dfe2d8c90c3a489d71c8991c4dd3/glog-targets.cmake")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/glog" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/CMakeFiles/Export/3b58dfe2d8c90c3a489d71c8991c4dd3/glog-targets.cmake")
   if(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Dd][Ee][Bb][Uu][Gg])$")
-    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/glog" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build/CMakeFiles/Export/3b58dfe2d8c90c3a489d71c8991c4dd3/glog-targets-debug.cmake")
+    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/glog" TYPE FILE FILES "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build/CMakeFiles/Export/3b58dfe2d8c90c3a489d71c8991c4dd3/glog-targets-debug.cmake")
   endif()
 endif()
 

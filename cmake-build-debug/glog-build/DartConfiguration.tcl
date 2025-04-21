@@ -4,8 +4,8 @@
 
 
 # Configuration directories and files
-SourceDirectory: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/thirdparty/glog
-BuildDirectory: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/cmake-build-debug/glog-build
+SourceDirectory: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/thirdparty/glog
+BuildDirectory: /Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/glog-build
 
 # Where to place the cost data store
 CostDataFile: 
@@ -27,7 +27,7 @@ SubmitInactivityTimeout:
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake" "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/thirdparty/glog"
+ConfigureCommand: "/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake" "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/thirdparty/glog"
 MakeCommand: /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
 DefaultCTestConfigurationType: Release
 

@@ -187,7 +187,7 @@
 #define STL_NAMESPACE std
 
 /* location of source code */
-#define TEST_SRC_DIR "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/lab6/minisql/thirdparty/glog"
+#define TEST_SRC_DIR "/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/thirdparty/glog"
 
 /* Define to necessary thread-local storage attribute. */
 #define GLOG_THREAD_LOCAL_STORAGE __thread

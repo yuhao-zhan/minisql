@@ -1,4 +1,4 @@
-// Copyright (c) 2007, Google Inc.
+// Copyright (c) 2022, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -33,20 +33,20 @@
 
 #include "mock-log.h"
 
-#include <string>
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <string>
+
 namespace {
 
-using GOOGLE_NAMESPACE::GLOG_INFO;
-using GOOGLE_NAMESPACE::GLOG_WARNING;
-using GOOGLE_NAMESPACE::GLOG_ERROR;
-using GOOGLE_NAMESPACE::glog_testing::ScopedMockLog;
+using google::GLOG_ERROR;
+using google::GLOG_INFO;
+using google::GLOG_WARNING;
+using google::glog_testing::ScopedMockLog;
 using std::string;
 using testing::_;
-using testing::HasSubstr;
+using testing::EndsWith;
 using testing::InSequence;
 using testing::InvokeWithoutArgs;
 
@@ -55,9 +55,9 @@ TEST(ScopedMockLogTest, InterceptsLog) {
   ScopedMockLog log;
 
   InSequence s;
-  EXPECT_CALL(log, Log(GLOG_WARNING, HasSubstr("/mock-log_unittest.cc"), "Fishy."));
-  EXPECT_CALL(log, Log(GLOG_INFO, _, "Working..."))
-      .Times(2);
+  EXPECT_CALL(log,
+              Log(GLOG_WARNING, EndsWith("mock-log_unittest.cc"), "Fishy."));
+  EXPECT_CALL(log, Log(GLOG_INFO, _, "Working...")).Times(2);
   EXPECT_CALL(log, Log(GLOG_ERROR, _, "Bad!!"));
 
   LOG(WARNING) << "Fishy.";
@@ -66,13 +66,9 @@ TEST(ScopedMockLogTest, InterceptsLog) {
   LOG(ERROR) << "Bad!!";
 }
 
-void LogBranch() {
-  LOG(INFO) << "Logging a branch...";
-}
+void LogBranch() { LOG(INFO) << "Logging a branch..."; }
 
-void LogTree() {
-  LOG(INFO) << "Logging the whole tree...";
-}
+void LogTree() { LOG(INFO) << "Logging the whole tree..."; }
 
 void LogForest() {
   LOG(INFO) << "Logging the entire forest.";
@@ -98,8 +94,9 @@ TEST(ScopedMockLogTest, LogDuringIntercept) {
 
 }  // namespace
 
-int main(int argc, char **argv) {
-  GOOGLE_NAMESPACE::InitGoogleLogging(argv[0]);
+int main(int argc, char** argv) {
+  google::InitGoogleLogging(argv[0]);
+  testing::InitGoogleTest(&argc, argv);
   testing::InitGoogleMock(&argc, argv);
 
   return RUN_ALL_TESTS();

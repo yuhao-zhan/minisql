@@ -5,6 +5,7 @@
 #ifndef MINISQL_ABSTRACT_STATEMENT_H
 #define MINISQL_ABSTRACT_STATEMENT_H
 
+#include <algorithm>
 #include <string>
 
 #include "planner/expressions/abstract_expression.h"

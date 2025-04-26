@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -49,110 +49,123 @@
 // macro to add platform specific defines (e.g. GLOG_OS_OPENBSD).
 
 #ifdef GLOG_BUILD_CONFIG_INCLUDE
-#include GLOG_BUILD_CONFIG_INCLUDE
+#  include GLOG_BUILD_CONFIG_INCLUDE
 #endif  // GLOG_BUILD_CONFIG_INCLUDE
+
+#include "symbolize.h"
 
 #include "utilities.h"
 
 #if defined(HAVE_SYMBOLIZE)
 
-#include <cstring>
+#  include <algorithm>
+#  include <cstdlib>
+#  include <cstring>
+#  include <limits>
 
-#include <algorithm>
-#include <limits>
-
-#include "symbolize.h"
-#include "demangle.h"
-
-_START_GOOGLE_NAMESPACE_
+#  include "demangle.h"
 
 // We don't use assert() since it's not guaranteed to be
 // async-signal-safe.  Instead we define a minimal assertion
 // macro. So far, we don't need pretty printing for __FILE__, etc.
+#  define GLOG_SAFE_ASSERT(expr) ((expr) ? 0 : (std::abort(), 0))
 
-// A wrapper for abort() to make it callable in ? :.
-static int AssertFail() {
-  abort();
-  return 0;  // Should not reach.
-}
+namespace google {
+inline namespace glog_internal_namespace_ {
 
-#define SAFE_ASSERT(expr) ((expr) ? 0 : AssertFail())
+namespace {
 
-static SymbolizeCallback g_symbolize_callback = NULL;
-void InstallSymbolizeCallback(SymbolizeCallback callback) {
-  g_symbolize_callback = callback;
-}
-
-static SymbolizeOpenObjectFileCallback g_symbolize_open_object_file_callback =
-    NULL;
-void InstallSymbolizeOpenObjectFileCallback(
-    SymbolizeOpenObjectFileCallback callback) {
-  g_symbolize_open_object_file_callback = callback;
-}
+SymbolizeCallback g_symbolize_callback = nullptr;
+SymbolizeOpenObjectFileCallback g_symbolize_open_object_file_callback = nullptr;
 
 // This function wraps the Demangle function to provide an interface
 // where the input symbol is demangled in-place.
 // To keep stack consumption low, we would like this function to not
 // get inlined.
-static ATTRIBUTE_NOINLINE void DemangleInplace(char *out, int out_size) {
+ATTRIBUTE_NOINLINE
+void DemangleInplace(char* out, size_t out_size) {
   char demangled[256];  // Big enough for sane demangled symbols.
   if (Demangle(out, demangled, sizeof(demangled))) {
     // Demangling succeeded. Copy to out if the space allows.
     size_t len = strlen(demangled);
-    if (len + 1 <= static_cast<size_t>(out_size)) {  // +1 for '\0'.
-      SAFE_ASSERT(len < sizeof(demangled));
+    if (len + 1 <= out_size) {  // +1 for '\0'.
+      GLOG_SAFE_ASSERT(len < sizeof(demangled));
       memmove(out, demangled, len + 1);
     }
   }
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace
 
-#if defined(__ELF__)
+void InstallSymbolizeCallback(SymbolizeCallback callback) {
+  g_symbolize_callback = callback;
+}
 
-#if defined(HAVE_DLFCN_H)
-#include <dlfcn.h>
-#endif
-#if defined(GLOG_OS_OPENBSD)
-#include <sys/exec_elf.h>
-#else
-#include <elf.h>
-#endif
-#include <cerrno>
-#include <climits>
-#include <cstddef>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <fcntl.h>
-#include <stdint.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+void InstallSymbolizeOpenObjectFileCallback(
+    SymbolizeOpenObjectFileCallback callback) {
+  g_symbolize_open_object_file_callback = callback;
+}
 
-#include "symbolize.h"
-#include "config.h"
-#include <glog/raw_logging.h>
+}  // namespace glog_internal_namespace_
+}  // namespace google
 
-// Re-runs fn until it doesn't cause EINTR.
-#define NO_INTR(fn)   do {} while ((fn) < 0 && errno == EINTR)
+#  if defined(HAVE_LINK_H)
 
-_START_GOOGLE_NAMESPACE_
+#    if defined(HAVE_DLFCN_H)
+#      include <dlfcn.h>
+#    endif
+#    include <fcntl.h>
+#    include <sys/stat.h>
+#    include <sys/types.h>
+#    include <unistd.h>
+
+#    include <cerrno>
+#    include <climits>
+#    include <cstddef>
+#    include <cstdint>
+#    include <cstdio>
+#    include <cstdlib>
+#    include <cstring>
+
+#    include "config.h"
+#    include "glog/raw_logging.h"
+#    include "symbolize.h"
+
+namespace google {
+inline namespace glog_internal_namespace_ {
+
+namespace {
+
+// Re-runs run until it doesn't cause EINTR.
+// Similar to the TEMP_FAILURE_RETRY macro from GNU C.
+template <class Functor>
+auto FailureRetry(Functor run, int error = EINTR) noexcept(noexcept(run())) {
+  decltype(run()) result;
+
+  while ((result = run()) == -1 && errno == error) {
+  }
+
+  return result;
+}
+
+}  // namespace
 
 // Read up to "count" bytes from "offset" in the file pointed by file
 // descriptor "fd" into the buffer starting at "buf" while handling short reads
 // and EINTR.  On success, return the number of bytes read.  Otherwise, return
 // -1.
-static ssize_t ReadFromOffset(const int fd, void *buf, const size_t count,
+static ssize_t ReadFromOffset(const int fd, void* buf, const size_t count,
                               const size_t offset) {
-  SAFE_ASSERT(fd >= 0);
-  SAFE_ASSERT(count <= static_cast<size_t>(std::numeric_limits<ssize_t>::max()));
-  char *buf0 = reinterpret_cast<char *>(buf);
+  GLOG_SAFE_ASSERT(fd >= 0);
+  GLOG_SAFE_ASSERT(count <=
+                   static_cast<size_t>(std::numeric_limits<ssize_t>::max()));
+  char* buf0 = reinterpret_cast<char*>(buf);
   size_t num_bytes = 0;
   while (num_bytes < count) {
-    ssize_t len;
-    NO_INTR(len = pread(fd, buf0 + num_bytes, count - num_bytes,
-                        static_cast<off_t>(offset + num_bytes)));
+    ssize_t len = FailureRetry([fd, p = buf0 + num_bytes, n = count - num_bytes,
+                                m = static_cast<off_t>(offset + num_bytes)] {
+      return pread(fd, p, n, m);
+    });
     if (len < 0) {  // There was an error other than EINTR.
       return -1;
     }
@@ -161,7 +174,7 @@ static ssize_t ReadFromOffset(const int fd, void *buf, const size_t count,
     }
     num_bytes += static_cast<size_t>(len);
   }
-  SAFE_ASSERT(num_bytes <= count);
+  GLOG_SAFE_ASSERT(num_bytes <= count);
   return static_cast<ssize_t>(num_bytes);
 }
 
@@ -169,8 +182,8 @@ static ssize_t ReadFromOffset(const int fd, void *buf, const size_t count,
 // pointed by "fd" into the buffer starting at "buf" while handling
 // short reads and EINTR.  On success, return true. Otherwise, return
 // false.
-static bool ReadFromOffsetExact(const int fd, void *buf,
-                                const size_t count, const size_t offset) {
+static bool ReadFromOffsetExact(const int fd, void* buf, const size_t count,
+                                const size_t offset) {
   ssize_t len = ReadFromOffset(fd, buf, count, offset);
   return static_cast<size_t>(len) == count;
 }
@@ -192,9 +205,11 @@ static int FileGetElfType(const int fd) {
 // and return true.  Otherwise, return false.
 // To keep stack consumption low, we would like this function to not get
 // inlined.
-static ATTRIBUTE_NOINLINE bool
-GetSectionHeaderByType(const int fd, ElfW(Half) sh_num, const size_t sh_offset,
-                       ElfW(Word) type, ElfW(Shdr) *out) {
+static ATTRIBUTE_NOINLINE bool GetSectionHeaderByType(const int fd,
+                                                      ElfW(Half) sh_num,
+                                                      const size_t sh_offset,
+                                                      ElfW(Word) type,
+                                                      ElfW(Shdr) * out) {
   // Read at most 16 section headers at a time to save read calls.
   ElfW(Shdr) buf[16];
   for (size_t i = 0; i < sh_num;) {
@@ -206,9 +221,9 @@ GetSectionHeaderByType(const int fd, ElfW(Half) sh_num, const size_t sh_offset,
     if (len == -1) {
       return false;
     }
-    SAFE_ASSERT(static_cast<size_t>(len) % sizeof(buf[0]) == 0);
+    GLOG_SAFE_ASSERT(static_cast<size_t>(len) % sizeof(buf[0]) == 0);
     const size_t num_headers_in_buf = static_cast<size_t>(len) / sizeof(buf[0]);
-    SAFE_ASSERT(num_headers_in_buf <= sizeof(buf) / sizeof(buf[0]));
+    GLOG_SAFE_ASSERT(num_headers_in_buf <= sizeof(buf) / sizeof(buf[0]));
     for (size_t j = 0; j < num_headers_in_buf; ++j) {
       if (buf[j].sh_type == type) {
         *out = buf[j];
@@ -225,8 +240,8 @@ GetSectionHeaderByType(const int fd, ElfW(Half) sh_num, const size_t sh_offset,
 const int kMaxSectionNameLen = 64;
 
 // name_len should include terminating '\0'.
-bool GetSectionHeaderByName(int fd, const char *name, size_t name_len,
-                            ElfW(Shdr) *out) {
+bool GetSectionHeaderByName(int fd, const char* name, size_t name_len,
+                            ElfW(Shdr) * out) {
   ElfW(Ehdr) elf_header;
   if (!ReadFromOffsetExact(fd, &elf_header, sizeof(elf_header), 0)) {
     return false;
@@ -241,15 +256,17 @@ bool GetSectionHeaderByName(int fd, const char *name, size_t name_len,
   }
 
   for (size_t i = 0; i < elf_header.e_shnum; ++i) {
-    size_t section_header_offset = (elf_header.e_shoff +
-                                   elf_header.e_shentsize * i);
+    size_t section_header_offset =
+        (elf_header.e_shoff + elf_header.e_shentsize * i);
     if (!ReadFromOffsetExact(fd, out, sizeof(*out), section_header_offset)) {
       return false;
     }
     char header_name[kMaxSectionNameLen];
     if (sizeof(header_name) < name_len) {
-      RAW_LOG(WARNING, "Section name '%s' is too long (%" PRIuS "); "
-              "section will not be found (even if present).", name, name_len);
+      RAW_LOG(WARNING,
+              "Section name '%s' is too long (%zu); "
+              "section will not be found (even if present).",
+              name, name_len);
       // No point in even trying.
       return false;
     }
@@ -274,11 +291,12 @@ bool GetSectionHeaderByName(int fd, const char *name, size_t name_len,
 // to out.  Otherwise, return false.
 // To keep stack consumption low, we would like this function to not get
 // inlined.
-static ATTRIBUTE_NOINLINE bool
-FindSymbol(uint64_t pc, const int fd, char *out, size_t out_size,
-           uint64_t symbol_offset, const ElfW(Shdr) *strtab,
-           const ElfW(Shdr) *symtab) {
-  if (symtab == NULL) {
+static ATTRIBUTE_NOINLINE bool FindSymbol(uint64_t pc, const int fd, char* out,
+                                          size_t out_size,
+                                          uint64_t symbol_offset,
+                                          const ElfW(Shdr) * strtab,
+                                          const ElfW(Shdr) * symtab) {
+  if (symtab == nullptr) {
     return false;
   }
   const size_t num_symbols = symtab->sh_size / symtab->sh_entsize;
@@ -288,20 +306,20 @@ FindSymbol(uint64_t pc, const int fd, char *out, size_t out_size,
     // If we are reading Elf64_Sym's, we want to limit this array to
     // 32 elements (to keep stack consumption low), otherwise we can
     // have a 64 element Elf32_Sym array.
-#if defined(__WORDSIZE) && __WORDSIZE == 64
+#    if defined(__WORDSIZE) && __WORDSIZE == 64
     const size_t NUM_SYMBOLS = 32U;
-#else
+#    else
     const size_t NUM_SYMBOLS = 64U;
-#endif
+#    endif
 
     // Read at most NUM_SYMBOLS symbols at once to save read() calls.
     ElfW(Sym) buf[NUM_SYMBOLS];
     size_t num_symbols_to_read = std::min(NUM_SYMBOLS, num_symbols - i);
     const ssize_t len =
         ReadFromOffset(fd, &buf, sizeof(buf[0]) * num_symbols_to_read, offset);
-    SAFE_ASSERT(static_cast<size_t>(len) % sizeof(buf[0]) == 0);
+    GLOG_SAFE_ASSERT(static_cast<size_t>(len) % sizeof(buf[0]) == 0);
     const size_t num_symbols_in_buf = static_cast<size_t>(len) / sizeof(buf[0]);
-    SAFE_ASSERT(num_symbols_in_buf <= num_symbols_to_read);
+    GLOG_SAFE_ASSERT(num_symbols_in_buf <= num_symbols_to_read);
     for (unsigned j = 0; j < num_symbols_in_buf; ++j) {
       const ElfW(Sym)& symbol = buf[j];
       uint64_t start_address = symbol.st_value;
@@ -312,7 +330,7 @@ FindSymbol(uint64_t pc, const int fd, char *out, size_t out_size,
           start_address <= pc && pc < end_address) {
         ssize_t len1 = ReadFromOffset(fd, out, out_size,
                                       strtab->sh_offset + symbol.st_name);
-        if (len1 <= 0 || memchr(out, '\0', out_size) == NULL) {
+        if (len1 <= 0 || memchr(out, '\0', out_size) == nullptr) {
           memset(out, 0, out_size);
           return false;
         }
@@ -328,11 +346,8 @@ FindSymbol(uint64_t pc, const int fd, char *out, size_t out_size,
 // both regular and dynamic symbol tables if necessary.  On success,
 // write the symbol name to "out" and return true.  Otherwise, return
 // false.
-static bool GetSymbolFromObjectFile(const int fd,
-                                    uint64_t pc,
-                                    char* out,
-                                    size_t out_size,
-                                    uint64_t base_address) {
+static bool GetSymbolFromObjectFile(const int fd, uint64_t pc, char* out,
+                                    size_t out_size, uint64_t base_address) {
   // Read the ELF header.
   ElfW(Ehdr) elf_header;
   if (!ReadFromOffsetExact(fd, &elf_header, sizeof(elf_header), 0)) {
@@ -344,8 +359,9 @@ static bool GetSymbolFromObjectFile(const int fd,
   // Consult a regular symbol table first.
   if (GetSectionHeaderByType(fd, elf_header.e_shnum, elf_header.e_shoff,
                              SHT_SYMTAB, &symtab)) {
-    if (!ReadFromOffsetExact(fd, &strtab, sizeof(strtab), elf_header.e_shoff +
-                             symtab.sh_link * sizeof(symtab))) {
+    if (!ReadFromOffsetExact(
+            fd, &strtab, sizeof(strtab),
+            elf_header.e_shoff + symtab.sh_link * sizeof(symtab))) {
       return false;
     }
     if (FindSymbol(pc, fd, out, out_size, base_address, &strtab, &symtab)) {
@@ -356,8 +372,9 @@ static bool GetSymbolFromObjectFile(const int fd,
   // If the symbol is not found, then consult a dynamic symbol table.
   if (GetSectionHeaderByType(fd, elf_header.e_shnum, elf_header.e_shoff,
                              SHT_DYNSYM, &symtab)) {
-    if (!ReadFromOffsetExact(fd, &strtab, sizeof(strtab), elf_header.e_shoff +
-                             symtab.sh_link * sizeof(symtab))) {
+    if (!ReadFromOffsetExact(
+            fd, &strtab, sizeof(strtab),
+            elf_header.e_shoff + symtab.sh_link * sizeof(symtab))) {
       return false;
     }
     if (FindSymbol(pc, fd, out, out_size, base_address, &strtab, &symtab)) {
@@ -369,31 +386,15 @@ static bool GetSymbolFromObjectFile(const int fd,
 }
 
 namespace {
-// Thin wrapper around a file descriptor so that the file descriptor
-// gets closed for sure.
-struct FileDescriptor {
-  const int fd_;
-  explicit FileDescriptor(int fd) : fd_(fd) {}
-  ~FileDescriptor() {
-    if (fd_ >= 0) {
-      close(fd_);
-    }
-  }
-  int get() { return fd_; }
-
- private:
-  FileDescriptor(const FileDescriptor &);
-  void operator=(const FileDescriptor&);
-};
 
 // Helper class for reading lines from file.
 //
 // Note: we don't use ProcMapsIterator since the object is big (it has
 // a 5k array member) and uses async-unsafe functions such as sscanf()
-// and snprintf().
+// and std::snprintf().
 class LineReader {
  public:
-  explicit LineReader(int fd, char *buf, size_t buf_len, size_t offset)
+  explicit LineReader(int fd, char* buf, size_t buf_len, size_t offset)
       : fd_(fd),
         buf_(buf),
         buf_len_(buf_len),
@@ -407,7 +408,7 @@ class LineReader {
   //
   // Note: if the last line doesn't end with '\n', the line will be
   // dropped.  It's an intentional behavior to make the code simple.
-  bool ReadLine(const char **bol, const char **eol) {
+  bool ReadLine(const char** bol, const char** eol) {
     if (BufferIsEmpty()) {  // First time.
       const ssize_t num_bytes = ReadFromOffset(fd_, buf_, buf_len_, offset_);
       if (num_bytes <= 0) {  // EOF or error.
@@ -418,13 +419,13 @@ class LineReader {
       bol_ = buf_;
     } else {
       bol_ = eol_ + 1;  // Advance to the next line in the buffer.
-      SAFE_ASSERT(bol_ <= eod_);  // "bol_" can point to "eod_".
+      GLOG_SAFE_ASSERT(bol_ <= eod_);  // "bol_" can point to "eod_".
       if (!HasCompleteLine()) {
-        const size_t incomplete_line_length = static_cast<size_t>(eod_ - bol_);
+        const auto incomplete_line_length = static_cast<size_t>(eod_ - bol_);
         // Move the trailing incomplete line to the beginning.
         memmove(buf_, bol_, incomplete_line_length);
         // Read text from file and append it.
-        char * const append_pos = buf_ + incomplete_line_length;
+        char* const append_pos = buf_ + incomplete_line_length;
         const size_t capacity_left = buf_len_ - incomplete_line_length;
         const ssize_t num_bytes =
             ReadFromOffset(fd_, append_pos, capacity_left, offset_);
@@ -437,7 +438,7 @@ class LineReader {
       }
     }
     eol_ = FindLineFeed();
-    if (eol_ == NULL) {  // '\n' not found.  Malformed line.
+    if (eol_ == nullptr) {  // '\n' not found.  Malformed line.
       return false;
     }
     *eol_ = '\0';  // Replace '\n' with '\0'.
@@ -448,57 +449,53 @@ class LineReader {
   }
 
   // Beginning of line.
-  const char *bol() {
-    return bol_;
-  }
+  const char* bol() { return bol_; }
 
   // End of line.
-  const char *eol() {
-    return eol_;
-  }
+  const char* eol() { return eol_; }
 
  private:
-  LineReader(const LineReader &);
-  void operator=(const LineReader&);
+  LineReader(const LineReader&) = delete;
+  void operator=(const LineReader&) = delete;
 
-  char *FindLineFeed() {
-    return reinterpret_cast<char *>(memchr(bol_, '\n', static_cast<size_t>(eod_ - bol_)));
+  char* FindLineFeed() {
+    return reinterpret_cast<char*>(
+        memchr(bol_, '\n', static_cast<size_t>(eod_ - bol_)));
   }
 
-  bool BufferIsEmpty() {
-    return buf_ == eod_;
-  }
+  bool BufferIsEmpty() { return buf_ == eod_; }
 
   bool HasCompleteLine() {
-    return !BufferIsEmpty() && FindLineFeed() != NULL;
+    return !BufferIsEmpty() && FindLineFeed() != nullptr;
   }
 
   const int fd_;
-  char * const buf_;
+  char* const buf_;
   const size_t buf_len_;
   size_t offset_;
-  char *bol_;
-  char *eol_;
-  const char *eod_;  // End of data in "buf_".
+  char* bol_;
+  char* eol_;
+  const char* eod_;  // End of data in "buf_".
 };
 }  // namespace
 
 // Place the hex number read from "start" into "*hex".  The pointer to
 // the first non-hex character or "end" is returned.
-static char *GetHex(const char *start, const char *end, uint64_t *hex) {
+static char* GetHex(const char* start, const char* end, uint64_t* hex) {
   *hex = 0;
-  const char *p;
+  const char* p;
   for (p = start; p < end; ++p) {
     int ch = *p;
-    if ((ch >= '0' && ch <= '9') ||
-        (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f')) {
-      *hex = (*hex << 4U) | (ch < 'A' ? static_cast<uint64_t>(ch - '0') : (ch & 0xF) + 9U);
+    if ((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'F') ||
+        (ch >= 'a' && ch <= 'f')) {
+      *hex = (*hex << 4U) |
+             (ch < 'A' ? static_cast<uint64_t>(ch - '0') : (ch & 0xF) + 9U);
     } else {  // Encountered the first non-hex character.
       break;
     }
   }
-  SAFE_ASSERT(p <= end);
-  return const_cast<char *>(p);
+  GLOG_SAFE_ASSERT(p <= end);
+  return const_cast<char*>(p);
 }
 
 // Searches for the object file (from /proc/self/maps) that contains
@@ -509,39 +506,33 @@ static char *GetHex(const char *start, const char *end, uint64_t *hex) {
 // file is opened successfully, returns the file descriptor.  Otherwise,
 // returns -1.  |out_file_name_size| is the size of the file name buffer
 // (including the null-terminator).
-static ATTRIBUTE_NOINLINE int
+static ATTRIBUTE_NOINLINE FileDescriptor
 OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
-                                             uint64_t &start_address,
-                                             uint64_t &base_address,
-                                             char *out_file_name,
+                                             uint64_t& start_address,
+                                             uint64_t& base_address,
+                                             char* out_file_name,
                                              size_t out_file_name_size) {
-  int object_fd;
-
-  int maps_fd;
-  NO_INTR(maps_fd = open("/proc/self/maps", O_RDONLY));
-  FileDescriptor wrapped_maps_fd(maps_fd);
-  if (wrapped_maps_fd.get() < 0) {
-    return -1;
+  FileDescriptor maps_fd{
+      FailureRetry([] { return open("/proc/self/maps", O_RDONLY); })};
+  if (!maps_fd) {
+    return nullptr;
   }
 
-  int mem_fd;
-  NO_INTR(mem_fd = open("/proc/self/mem", O_RDONLY));
-  FileDescriptor wrapped_mem_fd(mem_fd);
-  if (wrapped_mem_fd.get() < 0) {
-    return -1;
+  FileDescriptor mem_fd{
+      FailureRetry([] { return open("/proc/self/mem", O_RDONLY); })};
+  if (!mem_fd) {
+    return nullptr;
   }
 
   // Iterate over maps and look for the map containing the pc.  Then
   // look into the symbol tables inside.
   char buf[1024];  // Big enough for line of sane /proc/self/maps
-  unsigned num_maps = 0;
-  LineReader reader(wrapped_maps_fd.get(), buf, sizeof(buf), 0);
+  LineReader reader(maps_fd.get(), buf, sizeof(buf), 0);
   while (true) {
-    num_maps++;
-    const char *cursor;
-    const char *eol;
+    const char* cursor;
+    const char* eol;
     if (!reader.ReadLine(&cursor, &eol)) {  // EOF or malformed line.
-      return -1;
+      return nullptr;
     }
 
     // Start parsing line in /proc/self/maps.  Here is an example:
@@ -554,7 +545,7 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
     // Read start address.
     cursor = GetHex(cursor, eol, &start_address);
     if (cursor == eol || *cursor != '-') {
-      return -1;  // Malformed line.
+      return nullptr;  // Malformed line.
     }
     ++cursor;  // Skip '-'.
 
@@ -562,25 +553,26 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
     uint64_t end_address;
     cursor = GetHex(cursor, eol, &end_address);
     if (cursor == eol || *cursor != ' ') {
-      return -1;  // Malformed line.
+      return nullptr;  // Malformed line.
     }
     ++cursor;  // Skip ' '.
 
     // Read flags.  Skip flags until we encounter a space or eol.
-    const char * const flags_start = cursor;
+    const char* const flags_start = cursor;
     while (cursor < eol && *cursor != ' ') {
       ++cursor;
     }
     // We expect at least four letters for flags (ex. "r-xp").
     if (cursor == eol || cursor < flags_start + 4) {
-      return -1;  // Malformed line.
+      return nullptr;  // Malformed line.
     }
 
     // Determine the base address by reading ELF headers in process memory.
     ElfW(Ehdr) ehdr;
     // Skip non-readable maps.
     if (flags_start[0] == 'r' &&
-        ReadFromOffsetExact(mem_fd, &ehdr, sizeof(ElfW(Ehdr)), start_address) &&
+        ReadFromOffsetExact(mem_fd.get(), &ehdr, sizeof(ElfW(Ehdr)),
+                            start_address) &&
         memcmp(ehdr.e_ident, ELFMAG, SELFMAG) == 0) {
       switch (ehdr.e_type) {
         case ET_EXEC:
@@ -599,7 +591,7 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
           for (unsigned i = 0; i != ehdr.e_phnum; ++i) {
             ElfW(Phdr) phdr;
             if (ReadFromOffsetExact(
-                    mem_fd, &phdr, sizeof(phdr),
+                    mem_fd.get(), &phdr, sizeof(phdr),
                     start_address + ehdr.e_phoff + i * sizeof(phdr)) &&
                 phdr.p_type == PT_LOAD && phdr.p_offset == 0) {
               base_address = start_address - phdr.p_vaddr;
@@ -615,11 +607,11 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
     }
 
     // Check start and end addresses.
-    if (!(start_address <= pc && pc < end_address)) {
+    if (start_address > pc || pc >= end_address) {
       continue;  // We skip this map.  PC isn't in this map.
     }
 
-   // Check flags.  We are only interested in "r*x" maps.
+    // Check flags.  We are only interested in "r*x" maps.
     if (flags_start[0] != 'r' || flags_start[2] != 'x') {
       continue;  // We skip this map.
     }
@@ -629,7 +621,7 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
     uint64_t file_offset;
     cursor = GetHex(cursor, eol, &file_offset);
     if (cursor == eol || *cursor != ' ') {
-      return -1;  // Malformed line.
+      return nullptr;  // Malformed line.
     }
     ++cursor;  // Skip ' '.
 
@@ -647,52 +639,49 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
       ++cursor;
     }
     if (cursor == eol) {
-      return -1;  // Malformed line.
+      return nullptr;  // Malformed line.
     }
 
+    strncpy(out_file_name, cursor, out_file_name_size);
+    // Making sure |out_file_name| is always null-terminated.
+    out_file_name[out_file_name_size - 1] = '\0';
+
     // Finally, "cursor" now points to file name of our interest.
-    NO_INTR(object_fd = open(cursor, O_RDONLY));
-    if (object_fd < 0) {
-      // Failed to open object file.  Copy the object file name to
-      // |out_file_name|.
-      strncpy(out_file_name, cursor, out_file_name_size);
-      // Making sure |out_file_name| is always null-terminated.
-      out_file_name[out_file_name_size - 1] = '\0';
-      return -1;
-    }
-    return object_fd;
+    return FileDescriptor{
+        FailureRetry([cursor] { return open(cursor, O_RDONLY); })};
   }
 }
 
 // POSIX doesn't define any async-signal safe function for converting
 // an integer to ASCII. We'll have to define our own version.
 // itoa_r() converts an (unsigned) integer to ASCII. It returns "buf", if the
-// conversion was successful or NULL otherwise. It never writes more than "sz"
-// bytes. Output will be truncated as needed, and a NUL character is always
+// conversion was successful or nullptr otherwise. It never writes more than
+// "sz" bytes. Output will be truncated as needed, and a NUL character is always
 // appended.
 // NOTE: code from sandbox/linux/seccomp-bpf/demo.cc.
-static char *itoa_r(uintptr_t i, char *buf, size_t sz, unsigned base, size_t padding) {
+static char* itoa_r(uintptr_t i, char* buf, size_t sz, unsigned base,
+                    size_t padding) {
   // Make sure we can write at least one NUL byte.
   size_t n = 1;
   if (n > sz) {
-    return NULL;
+    return nullptr;
   }
 
   if (base < 2 || base > 16) {
     buf[0] = '\000';
-    return NULL;
+    return nullptr;
   }
 
-  char *start = buf;
+  char* start = buf;
 
   // Loop until we have converted the entire number. Output at least one
   // character (i.e. '0').
-  char *ptr = start;
+  char* ptr = start;
   do {
     // Make sure there is still enough space left in our output buffer.
     if (++n > sz) {
       buf[0] = '\000';
-      return NULL;
+      return nullptr;
     }
 
     // Output the next digit.
@@ -723,7 +712,7 @@ static char *itoa_r(uintptr_t i, char *buf, size_t sz, unsigned base, size_t pad
 // buffer size |dest_size| and guarantees that |dest| is null-terminated.
 static void SafeAppendString(const char* source, char* dest, size_t dest_size) {
   size_t dest_string_length = strlen(dest);
-  SAFE_ASSERT(dest_string_length < dest_size);
+  GLOG_SAFE_ASSERT(dest_string_length < dest_size);
   dest += dest_string_length;
   dest_size -= dest_string_length;
   strncpy(dest, source, dest_size);
@@ -748,12 +737,12 @@ static void SafeAppendHexNumber(uint64_t value, char* dest, size_t dest_size) {
 // and "out" is used as its output.
 // To keep stack consumption low, we would like this function to not
 // get inlined.
-static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
-                                                    size_t out_size) {
-  uint64_t pc0 = reinterpret_cast<uintptr_t>(pc);
+static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(
+    void* pc, char* out, size_t out_size, SymbolizeOptions /*options*/) {
+  auto pc0 = reinterpret_cast<uintptr_t>(pc);
   uint64_t start_address = 0;
   uint64_t base_address = 0;
-  int object_fd = -1;
+  FileDescriptor object_fd;
 
   if (out_size < 1) {
     return false;
@@ -762,24 +751,19 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
   SafeAppendString("(", out, out_size);
 
   if (g_symbolize_open_object_file_callback) {
-    object_fd = g_symbolize_open_object_file_callback(pc0, start_address,
-                                                      base_address, out + 1,
-                                                      out_size - 1);
+    object_fd.reset(g_symbolize_open_object_file_callback(
+        pc0, start_address, base_address, out + 1, out_size - 1));
   } else {
-    object_fd = OpenObjectFileContainingPcAndGetStartAddress(pc0, start_address,
-                                                             base_address,
-                                                             out + 1,
-                                                             out_size - 1);
+    object_fd = OpenObjectFileContainingPcAndGetStartAddress(
+        pc0, start_address, base_address, out + 1, out_size - 1);
   }
 
-  FileDescriptor wrapped_object_fd(object_fd);
-
-#if defined(PRINT_UNSYMBOLIZED_STACK_TRACES)
+#    if defined(PRINT_UNSYMBOLIZED_STACK_TRACES)
   {
-#else
+#    else
   // Check whether a file name was returned.
-  if (object_fd < 0) {
-#endif
+  if (!object_fd) {
+#    endif
     if (out[1]) {
       // The object file containing PC was determined successfully however the
       // object file was not opened successfully.  This is still considered
@@ -794,7 +778,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
     // Failed to determine the object file containing PC.  Bail out.
     return false;
   }
-  int elf_type = FileGetElfType(wrapped_object_fd.get());
+  int elf_type = FileGetElfType(object_fd.get());
   if (elf_type == -1) {
     return false;
   }
@@ -803,16 +787,15 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
     // Note: relocation (and much of the rest of this code) will be
     // wrong for prelinked shared libraries and PIE executables.
     uint64_t relocation = (elf_type == ET_DYN) ? start_address : 0;
-    int num_bytes_written = g_symbolize_callback(wrapped_object_fd.get(),
-                                                 pc, out, out_size,
-                                                 relocation);
+    int num_bytes_written =
+        g_symbolize_callback(object_fd.get(), pc, out, out_size, relocation);
     if (num_bytes_written > 0) {
       out += static_cast<size_t>(num_bytes_written);
       out_size -= static_cast<size_t>(num_bytes_written);
     }
   }
-  if (!GetSymbolFromObjectFile(wrapped_object_fd.get(), pc0,
-                               out, out_size, base_address)) {
+  if (!GetSymbolFromObjectFile(object_fd.get(), pc0, out, out_size,
+                               base_address)) {
     if (out[1] && !g_symbolize_callback) {
       // The object file containing PC was opened successfully however the
       // symbol was not found. The object may have been stripped. This is still
@@ -832,17 +815,20 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
   return true;
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace glog_internal_namespace_
+}  // namespace google
 
-#elif defined(GLOG_OS_MACOSX) && defined(HAVE_DLADDR)
+#  elif defined(GLOG_OS_MACOSX) && defined(HAVE_DLADDR)
 
-#include <dlfcn.h>
-#include <cstring>
+#    include <dlfcn.h>
 
-_START_GOOGLE_NAMESPACE_
+#    include <cstring>
 
-static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
-                                                    size_t out_size) {
+namespace google {
+inline namespace glog_internal_namespace_ {
+
+static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(
+    void* pc, char* out, size_t out_size, SymbolizeOptions /*options*/) {
   Dl_info info;
   if (dladdr(pc, &info)) {
     if (info.dli_sname) {
@@ -857,32 +843,31 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
   return false;
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace glog_internal_namespace_
+}  // namespace google
 
-#elif defined(GLOG_OS_WINDOWS) || defined(GLOG_OS_CYGWIN)
+#  elif defined(GLOG_OS_WINDOWS) || defined(GLOG_OS_CYGWIN)
 
-#include <windows.h>
-#include <dbghelp.h>
+#    include <dbghelp.h>
+#    include <windows.h>
 
-#ifdef _MSC_VER
-#pragma comment(lib, "dbghelp")
-#endif
+namespace google {
+inline namespace glog_internal_namespace_ {
 
-_START_GOOGLE_NAMESPACE_
+namespace {
 
-class SymInitializer {
-public:
+class SymInitializer final {
+ public:
   HANDLE process;
   bool ready;
-  SymInitializer() : process(NULL), ready(false) {
+  SymInitializer() : process(GetCurrentProcess()), ready(false) {
     // Initialize the symbol handler.
     // https://msdn.microsoft.com/en-us/library/windows/desktop/ms680344(v=vs.85).aspx
-    process = GetCurrentProcess();
     // Defer symbol loading.
     // We do not request undecorated symbols with SYMOPT_UNDNAME
     // because the mangling library calls UnDecorateSymbolName.
-    SymSetOptions(SYMOPT_DEFERRED_LOADS);
-    if (SymInitialize(process, NULL, true)) {
+    SymSetOptions(SYMOPT_DEFERRED_LOADS | SYMOPT_LOAD_LINES);
+    if (SymInitialize(process, nullptr, true)) {
       ready = true;
     }
   }
@@ -890,13 +875,18 @@ public:
     SymCleanup(process);
     // We do not need to close `HANDLE process` because it's a "pseudo handle."
   }
-private:
-  SymInitializer(const SymInitializer&);
-  SymInitializer& operator=(const SymInitializer&);
+
+  SymInitializer(const SymInitializer&) = delete;
+  SymInitializer& operator=(const SymInitializer&) = delete;
+  SymInitializer(SymInitializer&&) = delete;
+  SymInitializer& operator=(SymInitializer&&) = delete;
 };
 
-static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
-                                                      int out_size) {
+}  // namespace
+
+static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
+                                                    size_t out_size,
+                                                    SymbolizeOptions options) {
   const static SymInitializer symInitializer;
   if (!symInitializer.ready) {
     return false;
@@ -904,52 +894,70 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
   // Resolve symbol information from address.
   // https://msdn.microsoft.com/en-us/library/windows/desktop/ms680578(v=vs.85).aspx
   char buf[sizeof(SYMBOL_INFO) + MAX_SYM_NAME];
-  SYMBOL_INFO *symbol = reinterpret_cast<SYMBOL_INFO *>(buf);
+  SYMBOL_INFO* symbol = reinterpret_cast<SYMBOL_INFO*>(buf);
   symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
   symbol->MaxNameLen = MAX_SYM_NAME;
   // We use the ANSI version to ensure the string type is always `char *`.
   // This could break if a symbol has Unicode in it.
-  BOOL ret = SymFromAddr(symInitializer.process,
-                         reinterpret_cast<DWORD64>(pc), 0, symbol);
-  if (ret == 1 && static_cast<int>(symbol->NameLen) < out_size) {
-    // `NameLen` does not include the null terminating character.
-    strncpy(out, symbol->Name, static_cast<size_t>(symbol->NameLen) + 1);
-    out[static_cast<size_t>(symbol->NameLen)] = '\0';
+  BOOL ret = SymFromAddr(symInitializer.process, reinterpret_cast<DWORD64>(pc),
+                         0, symbol);
+  std::size_t namelen = static_cast<size_t>(symbol->NameLen);
+  if (ret && namelen < out_size) {
+    std::strncpy(out, symbol->Name, namelen);
+    out[namelen] = '\0';
+
+    DWORD displacement;
+    IMAGEHLP_LINE64 line{sizeof(IMAGEHLP_LINE64)};
+
+    BOOL found = FALSE;
+
+    if ((options & SymbolizeOptions::kNoLineNumbers) !=
+        SymbolizeOptions::kNoLineNumbers) {
+      found = SymGetLineFromAddr64(symInitializer.process,
+                                   reinterpret_cast<DWORD64>(pc), &displacement,
+                                   &line);
+    }
+
     // Symbolization succeeded.  Now we try to demangle the symbol.
     DemangleInplace(out, out_size);
+    out_size -= std::strlen(out);
+
+    if (found) {
+      std::size_t fnlen = std::strlen(line.FileName);
+      // Determine the number of digits (base 10) necessary to represent the
+      // line number
+      std::size_t digits = 1;  // At least one digit required
+      for (DWORD value = line.LineNumber; (value /= 10) != 0; ++digits) {
+      }
+      constexpr std::size_t extralen = 4;  // space + parens () + :
+      const std::size_t suffixlen = fnlen + extralen + fnlen + digits;
+
+      if (suffixlen < out_size) {
+        out_size -= std::snprintf(out + namelen, out_size, " (%s:%lu)",
+                                  line.FileName, line.LineNumber);
+      }
+    }
+
     return true;
   }
   return false;
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace glog_internal_namespace_
+}  // namespace google
 
-#else
-# error BUG: HAVE_SYMBOLIZE was wrongly set
-#endif
+#  else
+#    error BUG: HAVE_SYMBOLIZE was wrongly set
+#  endif
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
+inline namespace glog_internal_namespace_ {
 
-bool Symbolize(void *pc, char *out, size_t out_size) {
-  return SymbolizeAndDemangle(pc, out, out_size);
+bool Symbolize(void* pc, char* out, size_t out_size, SymbolizeOptions options) {
+  return SymbolizeAndDemangle(pc, out, out_size, options);
 }
 
-_END_GOOGLE_NAMESPACE_
-
-#else  /* HAVE_SYMBOLIZE */
-
-#include <cassert>
-
-#include "config.h"
-
-_START_GOOGLE_NAMESPACE_
-
-// TODO: Support other environments.
-bool Symbolize(void* /*pc*/, char* /*out*/, size_t /*out_size*/) {
-  assert(0);
-  return false;
-}
-
-_END_GOOGLE_NAMESPACE_
+}  // namespace glog_internal_namespace_
+}  // namespace google
 
 #endif

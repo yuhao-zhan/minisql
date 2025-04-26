@@ -5,9 +5,11 @@
 #include <mutex>
 #include <unordered_set>
 #include <vector>
+#include <unordered_map>
 
 #include "buffer/replacer.h"
 #include "common/config.h"
+#include "common/macros.h"
 
 using namespace std;
 
@@ -37,6 +39,9 @@ class LRUReplacer : public Replacer {
 
 private:
   // add your own private member variables here
+  size_t capacity;
+  std::list<frame_id_t> lru_list_;
+  std::unordered_map<frame_id_t, std::list<frame_id_t>::iterator> cache;
 };
 
 #endif  // MINISQL_LRU_REPLACER_H

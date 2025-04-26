@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "executor/executors/index_scan_executor.h"
 
 class RowidCompare {
@@ -57,8 +58,8 @@ vector<RowId> IndexScanExecutor::IndexScan(AbstractExpressionRef predicate) {
         if (lhs.empty()) return rhs;
         if (rhs.empty()) return lhs;
       }
-      sort(lhs.begin(), lhs.end(), RowidCompare());
-      sort(rhs.begin(), rhs.end(), RowidCompare());
+      std::sort(lhs.begin(), lhs.end(), RowidCompare());
+      std::sort(rhs.begin(), rhs.end(), RowidCompare());
       vector<RowId> result;
       set_intersection(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), back_inserter(result), RowidCompare());
       return result;

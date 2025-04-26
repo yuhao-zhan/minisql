@@ -14,6 +14,10 @@ SET(BUILD_SHARED_LIBS ON)
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+
 # Enable CTest
 ENABLE_TESTING()
 
@@ -48,8 +52,7 @@ TARGET_COMPILE_OPTIONS(gtest_main PRIVATE "-fPIC")
 ADD_SUBDIRECTORY(${THIRD_PARTY_DIR}/glog ${CMAKE_BINARY_DIR}/glog-build)
 
 # Compile options in debug mode
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb")
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb -fno-omit-frame-pointer -fno-optimize-sibling-calls")
 #SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
 if (APPLE)
     # Note: memory leak detection is not currently supported in macOS BigSur
@@ -57,7 +60,8 @@ if (APPLE)
 endif()
 # Compile options in cxx
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra -Werror -Wno-unused-parameter")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -std=gnu++11 -fPIC -Wall -Wextra -Wattributes -Wunused-parameter")
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -std=gnu++11 -fPIC -Wall -Wextra -Wattributes -Wunused-parameter")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fPIC -Wall -Wextra -Wattributes -Wunused-parameter")
 
 # Subdirectory
 ADD_SUBDIRECTORY(src ${CMAKE_BINARY_DIR}/bin)

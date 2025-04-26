@@ -35,37 +35,41 @@
 //    http://www.linux-foundation.org/spec/ELF/ppc64/PPC-elf64abi-1.9.html#STACK
 // Linux has similar code: http://patchwork.ozlabs.org/linuxppc/patch?id=8882
 
+#include <cstdint>  // for uintptr_t
 #include <cstdio>
-#include <stdint.h>   // for uintptr_t
+
 #include "stacktrace.h"
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
+inline namespace glog_internal_namespace_ {
 
 // Given a pointer to a stack frame, locate and return the calling
-// stackframe, or return NULL if no stackframe can be found. Perform sanity
+// stackframe, or return nullptr if no stackframe can be found. Perform sanity
 // checks (the strictness of which is controlled by the boolean parameter
 // "STRICT_UNWINDING") to reduce the chance that a bad pointer is returned.
-template<bool STRICT_UNWINDING>
-static void **NextStackFrame(void **old_sp) {
-  void **new_sp = static_cast<void **>(*old_sp);
+template <bool STRICT_UNWINDING>
+static void** NextStackFrame(void** old_sp) {
+  void** new_sp = static_cast<void**>(*old_sp);
 
   // Check that the transition from frame pointer old_sp to frame
   // pointer new_sp isn't clearly bogus
   if (STRICT_UNWINDING) {
     // With the stack growing downwards, older stack frame must be
     // at a greater address that the current one.
-    if (new_sp <= old_sp) return NULL;
+    if (new_sp <= old_sp) return nullptr;
     // Assume stack frames larger than 100,000 bytes are bogus.
-    if ((uintptr_t)new_sp - (uintptr_t)old_sp > 100000) return NULL;
+    if ((uintptr_t)new_sp - (uintptr_t)old_sp > 100000) return nullptr;
   } else {
     // In the non-strict mode, allow discontiguous stack frames.
     // (alternate-signal-stacks for example).
-    if (new_sp == old_sp) return NULL;
+    if (new_sp == old_sp) return nullptr;
     // And allow frames upto about 1MB.
-    if ((new_sp > old_sp)
-        && ((uintptr_t)new_sp - (uintptr_t)old_sp > 1000000)) return NULL;
+    if ((new_sp > old_sp) &&
+        ((uintptr_t)new_sp - (uintptr_t)old_sp > 1000000)) {
+      return nullptr;
+    }
   }
-  if ((uintptr_t)new_sp & (sizeof(void *) - 1)) return NULL;
+  if ((uintptr_t)new_sp & (sizeof(void*) - 1)) return nullptr;
   return new_sp;
 }
 
@@ -75,15 +79,15 @@ void StacktracePowerPCDummyFunction() { __asm__ volatile(""); }
 
 // If you change this function, also change GetStackFrames below.
 int GetStackTrace(void** result, int max_depth, int skip_count) {
-  void **sp;
+  void** sp;
   // Apple OS X uses an old version of gnu as -- both Darwin 7.9.0 (Panther)
   // and Darwin 8.8.1 (Tiger) use as 1.38.  This means we have to use a
   // different asm syntax.  I don't know quite the best way to discriminate
   // systems using the old as from the new one; I've gone with __APPLE__.
 #ifdef __APPLE__
-  __asm__ volatile ("mr %0,r1" : "=r" (sp));
+  __asm__ volatile("mr %0,r1" : "=r"(sp));
 #else
-  __asm__ volatile ("mr %0,1" : "=r" (sp));
+  __asm__ volatile("mr %0,1" : "=r"(sp));
 #endif
 
   // On PowerPC, the "Link Register" or "Link Record" (LR), is a stack
@@ -108,17 +112,18 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
       // linux ppc64), it's in sp[2].  For SYSV (used by linux ppc),
       // it's in sp[1].
 #if defined(_CALL_AIX) || defined(_CALL_DARWIN)
-      result[n++] = *(sp+2);
+      result[n++] = *(sp + 2);
 #elif defined(_CALL_SYSV)
-      result[n++] = *(sp+1);
-#elif defined(__APPLE__) || ((defined(__linux) || defined(__linux__)) && defined(__PPC64__))
+      result[n++] = *(sp + 1);
+#elif defined(__APPLE__) || \
+    ((defined(__linux) || defined(__linux__)) && defined(__PPC64__))
       // This check is in case the compiler doesn't define _CALL_AIX/etc.
-      result[n++] = *(sp+2);
+      result[n++] = *(sp + 2);
 #elif defined(__linux) || defined(__OpenBSD__)
       // This check is in case the compiler doesn't define _CALL_SYSV.
-      result[n++] = *(sp+1);
+      result[n++] = *(sp + 1);
 #else
-#error Need to specify the PPC ABI for your archiecture.
+#  error Need to specify the PPC ABI for your architecture.
 #endif
     }
     // Use strict unwinding rules.
@@ -127,4 +132,5 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
   return n;
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace glog_internal_namespace_
+}  // namespace google

@@ -1,5 +1,5 @@
+#include <algorithm>
 #include "index/b_plus_tree_index.h"
-
 #include "index/generic_key.h"
 #include "utils/tree_file_mgr.h"
 BPlusTreeIndex::BPlusTreeIndex(index_id_t index_id, IndexSchema *key_schema, size_t key_size,
@@ -69,7 +69,7 @@ dberr_t BPlusTreeIndex::ScanKey(const Row &key, vector<RowId> &result, Txn *txn,
     }
     vector<RowId> temp;
     if (container_.GetValue(index_key, temp, txn))
-      result.erase(find(result.begin(), result.end(), temp[0]));
+      result.erase(std::find(result.begin(), result.end(), temp[0]));
   }
   free(index_key);
   if (!result.empty())

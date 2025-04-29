@@ -122,7 +122,9 @@ bool DiskManager::IsPageFree(page_id_t logical_page_id) {
   page_id_t bitmap_physcial_id = physcial_page_id - logical_page_id % BITMAP_SIZE - 1;
   page_id_t page_offset = physcial_page_id - bitmap_physcial_id - 1;  
 
-  char * bitmap_data = nullptr;
+  // char * bitmap_data = nullptr;
+  auto *bitmap_data = new char[PAGE_SIZE];
+
   ReadPhysicalPage(bitmap_physcial_id, bitmap_data);
   BitmapPage<PAGE_SIZE> * bitmap_pointer = reinterpret_cast<BitmapPage<PAGE_SIZE> *>(bitmap_data);
 

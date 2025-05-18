@@ -46,15 +46,19 @@ TEST(BPlusTreeTests, BPlusTreeIndexSimpleTest) {
                                    new Column("account", TypeId::kTypeFloat, 2, true, false)};
   std::vector<uint32_t> index_key_map{0, 1};
   const TableSchema table_schema(columns);
+  cout << "table schema created! " << endl;
   auto *index_schema = Schema::ShallowCopySchema(&table_schema, index_key_map);
   auto *index = new BPlusTreeIndex(0, index_schema, 256, bpm_);
+  cout << "index schema created! " << endl;
   for (int i = 0; i < 10; i++) {
     std::vector<Field> fields{Field(TypeId::kTypeInt, i),
                               Field(TypeId::kTypeChar, const_cast<char *>("minisql"), 7, true)};
     Row row(fields);
     RowId rid(1000, i);
+    cout << "insert row " << i << endl;
     ASSERT_EQ(DB_SUCCESS, index->InsertEntry(row, rid, nullptr));
   }
+  cout << "inserted! " << endl;
   // Test Scan
   std::vector<RowId> ret;
   for (int i = 0; i < 10; i++) {
@@ -62,6 +66,7 @@ TEST(BPlusTreeTests, BPlusTreeIndexSimpleTest) {
                               Field(TypeId::kTypeChar, const_cast<char *>("minisql"), 7, true)};
     Row row(fields);
     RowId rid(1000, i);
+    cout << "scan row " << i << endl;
     ASSERT_EQ(DB_SUCCESS, index->ScanKey(row, ret, nullptr));
     ASSERT_EQ(rid.Get(), ret[i].Get());
   }

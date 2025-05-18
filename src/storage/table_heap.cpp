@@ -49,18 +49,18 @@ bool TableHeap::InsertTuple(Row &row, Txn *txn) {
 
 
 bool TableHeap::MarkDelete(const RowId &rid, Txn *txn) {
-    // Find the page which contains the tuple.
-    auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));
-    // If the page could not be found, then abort the recovery.
-    if (page == nullptr) {
-        return false;
-    }
-    // Otherwise, mark the tuple as deleted.
-    page->WLatch();
-    page->MarkDelete(rid, txn, lock_manager_, log_manager_);
-    page->WUnlatch();
-    buffer_pool_manager_->UnpinPage(page->GetTablePageId(), true);
-    return true;
+  // Find the page which contains the tuple.
+  auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));
+  // If the page could not be found, then abort the recovery.
+  if (page == nullptr) {
+    return false;
+  }
+  // Otherwise, mark the tuple as deleted.
+  page->WLatch();
+  page->MarkDelete(rid, txn, lock_manager_, log_manager_);
+  page->WUnlatch();
+  buffer_pool_manager_->UnpinPage(page->GetTablePageId(), true);
+  return true;
 }
 
 /**
@@ -111,7 +111,7 @@ bool TableHeap::UpdateTuple(Row &row, const RowId &rid, Txn *txn) {
  * TODO: Student Implement
  */
 void TableHeap::ApplyDelete(const RowId &rid, Txn *txn) {
-    // Step1: Find the page which contains the tuple.
+  // Step1: Find the page which contains the tuple.
     auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));
     if (page == nullptr) {
         return;
@@ -124,14 +124,14 @@ void TableHeap::ApplyDelete(const RowId &rid, Txn *txn) {
 }
 
 void TableHeap::RollbackDelete(const RowId &rid, Txn *txn) {
-    // Find the page which contains the tuple.
-    auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));
-    assert(page != nullptr);
-    // Rollback to delete.
-    page->WLatch();
-    page->RollbackDelete(rid, txn, log_manager_);
-    page->WUnlatch();
-    buffer_pool_manager_->UnpinPage(page->GetTablePageId(), true);
+  // Find the page which contains the tuple.
+  auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));
+  assert(page != nullptr);
+  // Rollback to delete.
+  page->WLatch();
+  page->RollbackDelete(rid, txn, log_manager_);
+  page->WUnlatch();
+  buffer_pool_manager_->UnpinPage(page->GetTablePageId(), true);
 }
 
 /**
@@ -152,15 +152,15 @@ bool TableHeap::GetTuple(Row *row, Txn *txn) {
 }
 
 void TableHeap::DeleteTable(page_id_t page_id) {
-    if (page_id != INVALID_PAGE_ID) {
-        auto temp_table_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(page_id));  // 删除table_heap
-        if (temp_table_page->GetNextPageId() != INVALID_PAGE_ID)
-            DeleteTable(temp_table_page->GetNextPageId());
-        buffer_pool_manager_->UnpinPage(page_id, false);
-        buffer_pool_manager_->DeletePage(page_id);
-    } else {
-        DeleteTable(first_page_id_);
-    }
+  if (page_id != INVALID_PAGE_ID) {
+    auto temp_table_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(page_id));  // 删除table_heap
+    if (temp_table_page->GetNextPageId() != INVALID_PAGE_ID)
+      DeleteTable(temp_table_page->GetNextPageId());
+    buffer_pool_manager_->UnpinPage(page_id, false);
+    buffer_pool_manager_->DeletePage(page_id);
+  } else {
+    DeleteTable(first_page_id_);
+  }
 }
 
 /**
@@ -170,24 +170,24 @@ TableIterator TableHeap::Begin(Txn *txn) {
     page_id_t pid = first_page_id_;
     // 遍历链表中所有页面，找到第一个有 tuple 的位置
     while (pid != INVALID_PAGE_ID) {
-        auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(pid));
-        if (page == nullptr) {
-            break;  // 无法取到页，直接退出
-        }
-        // 锁住页面，找第一个 tuple
-        page->RLatch();
-        RowId first_rid;
-        bool ok = page->GetFirstTupleRid(&first_rid);
-        page->RUnlatch();
-        // 释放页面引用，不标记脏
-        buffer_pool_manager_->UnpinPage(pid, /*is_dirty=*/false);
+    auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(pid));
+    if (page == nullptr) {
+        break;  // 无法取到页，直接退出
+    }
+    // 锁住页面，找第一个 tuple
+    page->RLatch();
+    RowId first_rid;
+    bool ok = page->GetFirstTupleRid(&first_rid);
+    page->RUnlatch();
+    // 释放页面引用，不标记脏
+    buffer_pool_manager_->UnpinPage(pid, /*is_dirty=*/false);
 
-        if (ok) {
-            // 找到合法的 tuple，返回指向它的迭代器
-            return TableIterator(this, first_rid, txn);
-        }
-        // 否则跳到下一页继续
-        pid = page->GetNextPageId();
+    if (ok) {
+        // 找到合法的 tuple，返回指向它的迭代器
+        return TableIterator(this, first_rid, txn);
+    }
+    // 否则跳到下一页继续
+    pid = page->GetNextPageId();
     }
     // 整个表都没有 tuple，返回 end()
     return End();

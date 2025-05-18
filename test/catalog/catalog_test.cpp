@@ -118,6 +118,7 @@ TEST(CatalogTest, CatalogIndexTest) {
   ASSERT_EQ(DB_SUCCESS, catalog_02->GetIndex("table-1", "index-1", index_info_02));
   std::vector<RowId> ret_02;
   for (int i = 0; i < 10; i++) {
+      cout << "Scan Key: " << i << endl;
     std::vector<Field> fields{Field(TypeId::kTypeInt, i),
                               Field(TypeId::kTypeChar, const_cast<char *>("minisql"), 7, true)};
     Row row(fields);

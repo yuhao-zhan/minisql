@@ -1,54 +1,54 @@
 #include "catalog/catalog.h"
 
 void CatalogMeta::SerializeTo(char *buf) const {
-    ASSERT(GetSerializedSize() <= PAGE_SIZE, "Failed to serialize catalog metadata to disk.");
-    MACH_WRITE_UINT32(buf, CATALOG_METADATA_MAGIC_NUM);
+  ASSERT(GetSerializedSize() <= PAGE_SIZE, "Failed to serialize catalog metadata to disk.");
+  MACH_WRITE_UINT32(buf, CATALOG_METADATA_MAGIC_NUM);
+  buf += 4;
+  MACH_WRITE_UINT32(buf, table_meta_pages_.size());
+  buf += 4;
+  MACH_WRITE_UINT32(buf, index_meta_pages_.size());
+  buf += 4;
+  for (auto iter : table_meta_pages_) {
+    MACH_WRITE_TO(table_id_t, buf, iter.first);
     buf += 4;
-    MACH_WRITE_UINT32(buf, table_meta_pages_.size());
+    MACH_WRITE_TO(page_id_t, buf, iter.second);
     buf += 4;
-    MACH_WRITE_UINT32(buf, index_meta_pages_.size());
+  }
+  for (auto iter : index_meta_pages_) {
+    MACH_WRITE_TO(index_id_t, buf, iter.first);
     buf += 4;
-    for (auto iter : table_meta_pages_) {
-        MACH_WRITE_TO(table_id_t, buf, iter.first);
-        buf += 4;
-        MACH_WRITE_TO(page_id_t, buf, iter.second);
-        buf += 4;
-    }
-    for (auto iter : index_meta_pages_) {
-        MACH_WRITE_TO(index_id_t, buf, iter.first);
-        buf += 4;
-        MACH_WRITE_TO(page_id_t, buf, iter.second);
-        buf += 4;
-    }
+    MACH_WRITE_TO(page_id_t, buf, iter.second);
+    buf += 4;
+  }
 }
 
 CatalogMeta *CatalogMeta::DeserializeFrom(char *buf) {
-    // check valid
-    uint32_t magic_num = MACH_READ_UINT32(buf);
+  // check valid
+  uint32_t magic_num = MACH_READ_UINT32(buf);
+  buf += 4;
+  ASSERT(magic_num == CATALOG_METADATA_MAGIC_NUM, "Failed to deserialize catalog metadata from disk.");
+  // get table and index nums
+  uint32_t table_nums = MACH_READ_UINT32(buf);
+  buf += 4;
+  uint32_t index_nums = MACH_READ_UINT32(buf);
+  buf += 4;
+  // create metadata and read value
+  CatalogMeta *meta = new CatalogMeta();
+  for (uint32_t i = 0; i < table_nums; i++) {
+    auto table_id = MACH_READ_FROM(table_id_t, buf);
     buf += 4;
-    ASSERT(magic_num == CATALOG_METADATA_MAGIC_NUM, "Failed to deserialize catalog metadata from disk.");
-    // get table and index nums
-    uint32_t table_nums = MACH_READ_UINT32(buf);
+    auto table_heap_page_id = MACH_READ_FROM(page_id_t, buf);
     buf += 4;
-    uint32_t index_nums = MACH_READ_UINT32(buf);
+    meta->table_meta_pages_.emplace(table_id, table_heap_page_id);
+  }
+  for (uint32_t i = 0; i < index_nums; i++) {
+    auto index_id = MACH_READ_FROM(index_id_t, buf);
     buf += 4;
-    // create metadata and read value
-    CatalogMeta *meta = new CatalogMeta();
-    for (uint32_t i = 0; i < table_nums; i++) {
-        auto table_id = MACH_READ_FROM(table_id_t, buf);
-        buf += 4;
-        auto table_heap_page_id = MACH_READ_FROM(page_id_t, buf);
-        buf += 4;
-        meta->table_meta_pages_.emplace(table_id, table_heap_page_id);
-    }
-    for (uint32_t i = 0; i < index_nums; i++) {
-        auto index_id = MACH_READ_FROM(index_id_t, buf);
-        buf += 4;
-        auto index_page_id = MACH_READ_FROM(page_id_t, buf);
-        buf += 4;
-        meta->index_meta_pages_.emplace(index_id, index_page_id);
-    }
-    return meta;
+    auto index_page_id = MACH_READ_FROM(page_id_t, buf);
+    buf += 4;
+    meta->index_meta_pages_.emplace(index_id, index_page_id);
+  }
+  return meta;
 }
 
 /**
@@ -72,8 +72,8 @@ CatalogMeta::CatalogMeta() {}
  */
 CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManager *lock_manager,
                                LogManager *log_manager, bool init)
-        : buffer_pool_manager_(buffer_pool_manager), lock_manager_(lock_manager), log_manager_(log_manager),catalog_meta_(nullptr),
-          next_table_id_(0), next_index_id_(0)  {
+    : buffer_pool_manager_(buffer_pool_manager), lock_manager_(lock_manager), log_manager_(log_manager),catalog_meta_(nullptr),
+    next_table_id_(0), next_index_id_(0)  {
     if (init) {
         // --- 全新初始化 ---
         // 1) 新建一个空的 CatalogMeta
@@ -81,7 +81,6 @@ CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManag
         // 2) 在 page 0 上分配并写入
         page_id_t meta_pid = CATALOG_META_PAGE_ID;
         Page *page = buffer_pool_manager_->FetchPage(meta_pid);
-        cout << "CatalogManager::CatalogManager: meta_pid = " << meta_pid << endl;
         ASSERT(meta_pid == CATALOG_META_PAGE_ID, "Not CATALOG_META_PAGE_ID");  // 确保我们是第 0 页
         char *buf = page->GetData();
         catalog_meta_->SerializeTo(buf);
@@ -123,14 +122,14 @@ CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManag
 }
 
 CatalogManager::~CatalogManager() {
-    FlushCatalogMetaPage();
-    delete catalog_meta_;
-    for (auto iter : tables_) {
-        delete iter.second;
-    }
-    for (auto iter : indexes_) {
-        delete iter.second;
-    }
+  FlushCatalogMetaPage();
+  delete catalog_meta_;
+  for (auto iter : tables_) {
+    delete iter.second;
+  }
+  for (auto iter : indexes_) {
+    delete iter.second;
+  }
 }
 
 /**
@@ -144,7 +143,7 @@ dberr_t CatalogManager::CreateTable(const string &table_name, TableSchema *schem
     if (page == nullptr) return DB_FAILED;
     ASSERT(page_id != CATALOG_META_PAGE_ID, "Create A Page with PageID = CATALOG_META_PAGE_ID");  // 确保我们不是在第 0 页
     /** You should use DeepCopySchema in CreateTable. **/
-    auto schema_copy = Schema::DeepCopySchema(schema);
+     auto schema_copy = Schema::DeepCopySchema(schema);
     // 2) 创建表元数据
     TableMetadata *tbl_meta = TableMetadata::Create(table_id, table_name, page_id, schema_copy);
     // 3) 创建表堆
@@ -226,11 +225,23 @@ dberr_t CatalogManager::CreateIndex(const std::string &table_name, const string 
         key_map.push_back(col_idx);
     }
 
+    // If index_name already exists, return DB_INDEX_NAME_EXIST
+    auto it3 = index_names_.find(table_name);
+    if (it3 != index_names_.end()) {
+        auto it4 = it3->second.find(index_name);
+        if (it4 != it3->second.end()) {
+            return DB_INDEX_ALREADY_EXIST;
+        }
+    }
+
     // 4) 创建索引元数据
     IndexMetadata *idx_meta = IndexMetadata::Create(index_id, index_name, table_id, key_map);
     // 5) 创建索引信息
     index_info = IndexInfo::Create();
     index_info->Init(idx_meta, table_info, buffer_pool_manager_);
+
+
+
     // 6) 将索引信息保存到 maps
     indexes_[index_id] = index_info;
     index_names_[table_name][index_name] = index_id;

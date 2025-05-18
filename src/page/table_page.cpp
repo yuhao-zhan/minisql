@@ -2,12 +2,33 @@
 
 // TODO: Update interface implementation if apply recovery
 
+//void TablePage::Init(page_id_t page_id, page_id_t prev_id, LogManager *log_mgr, Txn *txn) {
+//  memcpy(GetData(), &page_id, sizeof(page_id));
+//  SetPrevPageId(prev_id);
+//  SetNextPageId(INVALID_PAGE_ID);
+//  SetFreeSpacePointer(PAGE_SIZE);
+//  SetTupleCount(0);
+//}
+// TablePage.cpp
+
 void TablePage::Init(page_id_t page_id, page_id_t prev_id, LogManager *log_mgr, Txn *txn) {
-  memcpy(GetData(), &page_id, sizeof(page_id));
-  SetPrevPageId(prev_id);
-  SetNextPageId(INVALID_PAGE_ID);
-  SetFreeSpacePointer(PAGE_SIZE);
-  SetTupleCount(0);
+    // 1. 写入 PageId（offset 0）
+    memcpy(GetData(), &page_id, sizeof(page_id));
+
+    // 2. 写入初始 LSN=0（offset 4）
+    uint32_t lsn = 0;
+    memcpy(GetData() + sizeof(page_id), &lsn, sizeof(lsn));
+
+    // 3. 设置双向链表指针
+    SetPrevPageId(prev_id);
+    SetNextPageId(INVALID_PAGE_ID);
+
+    // 4. 初始化 FreeSpacePointer 到页头之后
+    //    PAGE_SIZE - SIZE_TABLE_PAGE_HEADER = 可用写入区域起点
+    SetFreeSpacePointer(PAGE_SIZE - SIZE_TABLE_PAGE_HEADER);
+
+    // 5. 初始化 TupleCount
+    SetTupleCount(0);
 }
 
 bool TablePage::InsertTuple(Row &row, Schema *schema, Txn *txn, LockManager *lock_manager, LogManager *log_manager) {

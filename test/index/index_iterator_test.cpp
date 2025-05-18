@@ -17,9 +17,12 @@ TEST(BPlusTreeTests, IndexIteratorTest) {
   // Generate insert record
   vector<GenericKey *> insert_key;
   for (int i = 1; i <= 50; i++) {
+      cout << "-------------------------------------------" << endl;
+      cout << "insert key: " << i << endl;
     GenericKey *key = KP.InitKey();
     std::vector<Field> fields{Field(TypeId::kTypeInt, i)};
     KP.SerializeFromKey(key, Row(fields), table_schema);
+    cout << "Success to serialize key: " << i << endl;
     insert_key.emplace_back(key);
     tree.Insert(key, RowId(i * 100), nullptr);
   }

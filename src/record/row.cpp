@@ -4,14 +4,18 @@
  * TODO: Student Implement
  */
 uint32_t Row::SerializeTo(char *buf, Schema *schema) const {
+    std::cout << "Enter serialize row" << std::endl;
     ASSERT(schema != nullptr, "Invalid schema before serialize.");
     ASSERT(schema->GetColumnCount() == fields_.size(), "Fields size do not match schema's column size.");
     char *pos = buf;
+    std::cout << "pos: " << static_cast<void *>(pos) << std::endl;
     // 1. 写入 RowId（page_id + slot_num 各 4 字节）
     std::cout << "RowId: " << rid_.GetPageId() << ", " << rid_.GetSlotNum() << std::endl;
     MACH_WRITE_UINT32(pos, rid_.GetPageId());
+    std::cout << "RowId page_id: " << MACH_READ_UINT32(pos) << std::endl;
     pos += sizeof(uint32_t);
     MACH_WRITE_UINT32(pos, rid_.GetSlotNum());
+    std::cout << "RowId slot_num: " << MACH_READ_UINT32(pos) << std::endl;
     pos += sizeof(uint32_t);
 
     // 2. 写入列数
@@ -43,20 +47,42 @@ uint32_t Row::SerializeTo(char *buf, Schema *schema) const {
     return pos - buf;
 }
 
+
+uint32_t Row::SerializeKeyTo(char *buf, Schema *schema) const {
+    ASSERT(schema != nullptr, "Invalid schema for key serialize.");
+    ASSERT(schema->GetColumnCount() == fields_.size(), "Field count mismatch for key.");
+
+    char *pos = buf;
+    for (uint32_t i = 0; i < schema->GetColumnCount(); i++) {
+        // 如果字段为 NULL，你要决定是写一个占位还是直接跳过——
+        // 通常索引 key 字段不允许 NULL，这里假设都非 NULL
+        pos += fields_[i]->SerializeTo(pos);
+    }
+    return static_cast<uint32_t>(pos - buf);
+}
+
+
 uint32_t Row::DeserializeFrom(char *buf, Schema *schema) {
+    std::cout << "Start deserialize row" << std::endl;
     ASSERT(schema != nullptr, "Invalid schema before serialize.");
     ASSERT(fields_.empty(), "Non empty field in row.");
     char *pos = buf;
+    std::cout << "pos: " << static_cast<void *>(pos) << std::endl;
     // 1. 读 RowId
     uint32_t page_id = MACH_READ_UINT32(pos);
+    std::cout << "RowId page_id: " << page_id << std::endl;
     pos += sizeof(uint32_t);
     uint32_t slot_num = MACH_READ_UINT32(pos);
+    std::cout << "RowId slot_num: " << slot_num << std::endl;
     pos += sizeof(uint32_t);
     rid_.Set(page_id, slot_num);
+    std::cout << "RowId: " << rid_.GetPageId() << ", " << rid_.GetSlotNum() << std::endl;
 
     // 2. 读列数并校验
     uint32_t col_count = MACH_READ_UINT32(pos);
     pos += sizeof(uint32_t);
+    std::cout << "col_count: " << col_count << std::endl;
+    std::cout << "schema col count: " << schema->GetColumnCount() << std::endl;
     ASSERT(col_count == schema->GetColumnCount(), "Column count mismatch in row deserialize.");
 
     // 3. 读 null bitmap
@@ -85,6 +111,27 @@ uint32_t Row::DeserializeFrom(char *buf, Schema *schema) {
     }
 
     return pos - buf;
+}
+
+uint32_t Row::DeserializeKeyFrom(const char *buf, Schema *schema) {
+    ASSERT(schema != nullptr, "Invalid schema for key deserialize.");
+    // 清掉旧的字段指针
+    for (auto f : fields_) delete f;
+    fields_.clear();
+
+    const char *pos = buf;
+    for (uint32_t i = 0; i < schema->GetColumnCount(); i++) {
+        const Column *col = schema->GetColumn(i);
+        Field *field_ptr = nullptr;
+        // 假设 key 字段都不为 NULL，is_null = false
+        uint32_t consumed = Field::DeserializeFrom(const_cast<char*>(pos),
+                                                   col->GetType(),
+                                                   &field_ptr,
+                /*is_null=*/false);
+        pos += consumed;
+        fields_.push_back(field_ptr);
+    }
+    return static_cast<uint32_t>(pos - buf);
 }
 
 uint32_t Row::GetSerializedSize(Schema *schema) const {

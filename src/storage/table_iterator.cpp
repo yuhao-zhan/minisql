@@ -46,7 +46,7 @@ bool TableIterator::operator==(const TableIterator &itr) const {
 }
 
 bool TableIterator::operator!=(const TableIterator &itr) const {
-    return !(*this == itr);
+  return !(*this == itr);
 }
 
 const Row &TableIterator::operator*() {

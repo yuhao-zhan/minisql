@@ -70,7 +70,9 @@ class BPlusTree {
  private:
   void StartNewTree(GenericKey *key, const RowId &value);
 
-  bool InsertIntoLeaf(GenericKey *key, const RowId &value, Txn *transaction = nullptr);
+  bool InsertIntoLeaf(LeafPage *leaf, GenericKey *key, const RowId &value, Txn *transaction = nullptr);
+
+    //bool BPlusTree::InsertIntoLeaf(LeafPage *leaf, GenericKey *key, const RowId &value, Txn *txn)
 
   void InsertIntoParent(BPlusTreePage *old_node, GenericKey *key, BPlusTreePage *new_node, Txn *transaction = nullptr);
 

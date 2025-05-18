@@ -21,85 +21,85 @@
  *      | Page N | Free Page BitMap 2 | Page N+1 | ... | Page 2N | ... |
  */
 class DiskManager {
- public:
-  explicit DiskManager(const std::string &db_file);
+public:
+    explicit DiskManager(const std::string &db_file);
 
-  ~DiskManager() {
-    if (!closed) {
-      Close();
+    ~DiskManager() {
+        if (!closed) {
+            Close();
+        }
     }
-  }
 
-  /**
-   * Read page from specific page_id
-   * Note: page_id = 0 is reserved for free page bit map
-   */
-  void ReadPage(page_id_t logical_page_id, char *page_data);
+    /**
+     * Read page from specific page_id
+     * Note: page_id = 0 is reserved for free page bit map
+     */
+    void ReadPage(page_id_t logical_page_id, char *page_data);
 
-  /**
-   * Write data to specific page
-   * Note: page_id = 0 is reserved for free page bit map
-   */
-  void WritePage(page_id_t logical_page_id, const char *page_data);
+    /**
+     * Write data to specific page
+     * Note: page_id = 0 is reserved for free page bit map
+     */
+    void WritePage(page_id_t logical_page_id, const char *page_data);
 
-  /**
-   * Get next free page from disk
-   * @return logical page id of allocated page
-   */
-  page_id_t AllocatePage();
+    /**
+     * Get next free page from disk
+     * @return logical page id of allocated page
+     */
+    page_id_t AllocatePage();
 
-  /**
-   * Free this page and reset bit map
-   */
-  void DeAllocatePage(page_id_t logical_page_id);
+    /**
+     * Free this page and reset bit map
+     */
+    void DeAllocatePage(page_id_t logical_page_id);
 
-  /**
-   * Return whether specific logical_page_id is free
-   */
-  bool IsPageFree(page_id_t logical_page_id);
+    /**
+     * Return whether specific logical_page_id is free
+     */
+    bool IsPageFree(page_id_t logical_page_id);
 
-  /**
-   * Shut down the disk manager and close all the file resources.
-   */
-  void Close();
+    /**
+     * Shut down the disk manager and close all the file resources.
+     */
+    void Close();
 
-  /**
-   * Get Meta Page
-   * Note: Used only for debug
-   */
-  char *GetMetaData() { return meta_data_; }
+    /**
+     * Get Meta Page
+     * Note: Used only for debug
+     */
+    char *GetMetaData() { return meta_data_; }
 
-  static constexpr size_t BITMAP_SIZE = BitmapPage<PAGE_SIZE>::GetMaxSupportedSize();
+    static constexpr size_t BITMAP_SIZE = BitmapPage<PAGE_SIZE>::GetMaxSupportedSize();
 
- private:
-  /**
-   * Helper function to get disk file size
-   */
-  int GetFileSize(const std::string &file_name);
+private:
+    /**
+     * Helper function to get disk file size
+     */
+    int GetFileSize(const std::string &file_name);
 
-  /**
-   * Read physical page from disk
-   */
-  void ReadPhysicalPage(page_id_t physical_page_id, char *page_data);
+    /**
+     * Read physical page from disk
+     */
+    void ReadPhysicalPage(page_id_t physical_page_id, char *page_data);
 
-  /**
-   * Write data to physical page in disk
-   */
-  void WritePhysicalPage(page_id_t physical_page_id, const char *page_data);
+    /**
+     * Write data to physical page in disk
+     */
+    void WritePhysicalPage(page_id_t physical_page_id, const char *page_data);
 
-  /**
-   * Map logical page id to physical page id
-   */
-  page_id_t MapPageId(page_id_t logical_page_id);
+    /**
+     * Map logical page id to physical page id
+     */
+    page_id_t MapPageId(page_id_t logical_page_id);
 
- private:
-  // stream to write db file
-  std::fstream db_io_;
-  std::string file_name_;
-  // with multiple buffer pool instances, need to protect file access
-  std::recursive_mutex db_io_latch_;
-  bool closed{false};
-  char meta_data_[PAGE_SIZE];
+private:
+    // stream to write db file
+    std::fstream db_io_;
+    std::string file_name_;
+    // with multiple buffer pool instances, need to protect file access
+    std::recursive_mutex db_io_latch_;
+    bool closed{false};
+    char meta_data_[PAGE_SIZE];
 };
 
 #endif

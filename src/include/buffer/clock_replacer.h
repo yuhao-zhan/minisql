@@ -41,7 +41,7 @@ class CLOCKReplacer : public Replacer {
  private:
   size_t capacity;
   list<frame_id_t> clock_list;               // replacer中可以被替换的数据页
-  map<frame_id_t, bool> clock_status;  // 数据页的存储状态
+  map<frame_id_t, frame_id_t> clock_status;  // 数据页的存储状态
 };
 
 #endif  // MINISQL_CLOCK_REPLACER_H

@@ -43,10 +43,12 @@ TEST(BPlusTreeTests, SampleTest) {
   }
   // Insert data
   for (int i = 0; i < n; i++) {
+    cout << "Insert key: " << i << endl;
     tree.Insert(keys[i], values[i]);
   }
   ASSERT_TRUE(tree.Check());
   // Print tree
+  cout << "Print tree" << endl;
   tree.PrintTree(mgr[0], table_schema);
   // Search keys
   vector<RowId> ans;

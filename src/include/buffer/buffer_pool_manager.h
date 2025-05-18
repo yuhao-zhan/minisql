@@ -13,46 +13,46 @@
 using namespace std;
 
 class BufferPoolManager {
- public:
-  explicit BufferPoolManager(size_t pool_size, DiskManager *disk_manager);
+public:
+    explicit BufferPoolManager(size_t pool_size, DiskManager *disk_manager);
 
-  ~BufferPoolManager();
+    ~BufferPoolManager();
 
-  Page *FetchPage(page_id_t page_id);
+    Page *FetchPage(page_id_t page_id);
 
-  bool UnpinPage(page_id_t page_id, bool is_dirty);
+    bool UnpinPage(page_id_t page_id, bool is_dirty);
 
-  bool FlushPage(page_id_t page_id);
+    bool FlushPage(page_id_t page_id);
 
-  Page *NewPage(page_id_t &page_id);
+    Page *NewPage(page_id_t &page_id);
 
-  bool DeletePage(page_id_t page_id);
+    bool DeletePage(page_id_t page_id);
 
-  bool IsPageFree(page_id_t page_id);
+    bool IsPageFree(page_id_t page_id);
 
-  bool CheckAllUnpinned();
+    bool CheckAllUnpinned();
 
- private:
-  /**
-   * Allocate new page (operations like create index/table) For now just keep an increasing counter
-   */
-  page_id_t AllocatePage();
+private:
+    /**
+     * Allocate new page (operations like create index/table) For now just keep an increasing counter
+     */
+    page_id_t AllocatePage();
 
-  /**
-   * Deallocate page (operations like drop index/table) Need bitmap in header page for tracking pages
-   */
-  void DeallocatePage(page_id_t page_id);
+    /**
+     * Deallocate page (operations like drop index/table) Need bitmap in header page for tracking pages
+     */
+    void DeallocatePage(page_id_t page_id);
 
-  frame_id_t TryToFindFreePage();
+    frame_id_t TryToFindFreePage();
 
- private:
-  size_t pool_size_;                                 // number of pages in buffer pool
-  Page *pages_;                                      // array of pages
-  DiskManager *disk_manager_;                        // pointer to the disk manager.
-  unordered_map<page_id_t, frame_id_t> page_table_;  // to keep track of pages
-  Replacer *replacer_;                               // to find an unpinned page for replacement
-  list<frame_id_t> free_list_;                       // to find a free page for replacement
-  recursive_mutex latch_;                            // to protect shared data structure
+private:
+    size_t pool_size_;                                 // number of pages in buffer pool
+    Page *pages_;                                      // array of pages
+    DiskManager *disk_manager_;                        // pointer to the disk manager.
+    unordered_map<page_id_t, frame_id_t> page_table_;  // to keep track of pages
+    Replacer *replacer_;                               // to find an unpinned page for replacement
+    list<frame_id_t> free_list_;                       // to find a free page for replacement
+    recursive_mutex latch_;                            // to protect shared data structure
 };
 
 #endif  // MINISQL_BUFFER_POOL_MANAGER_H

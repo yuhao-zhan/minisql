@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <algorithm>
 
 #include "executor/execute_context.h"
 #include "executor/executors/abstract_executor.h"

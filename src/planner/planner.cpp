@@ -2,6 +2,7 @@
 // Created by njz on 2023/2/2.
 //
 #include "planner/planner.h"
+#include <algorithm>
 
 void Planner::PlanQuery(pSyntaxNode ast) {
   switch (ast->type_) {

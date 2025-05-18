@@ -12,6 +12,7 @@
 #include "planner/expressions/comparison_expression.h"
 #include "planner/expressions/constant_value_expression.h"
 #include "planner/expressions/logic_expression.h"
+#include <algorithm>
 
 extern "C" {
 #include "parser/parser.h"

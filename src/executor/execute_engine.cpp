@@ -16,6 +16,8 @@
 #include "glog/logging.h"
 #include "planner/planner.h"
 #include "utils/utils.h"
+#include "parser/syntax_tree_printer.h"
+#include "utils/tree_file_mgr.h"
 
 ExecuteEngine::ExecuteEngine() {
   char path[] = "./databases";
@@ -344,7 +346,79 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode ast, ExecuteContext *conte
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteCreateTable" << std::endl;
 #endif
-  return DB_FAILED;
+  if (current_db_.empty()) {
+    std::cout << "No database selected" << std::endl;
+    return DB_FAILED;
+  }
+
+  string table_name = ast->child_->val_;
+  TableInfo * table_info; 
+  if (dbs_[current_db_]->catalog_mgr_->GetTable(table_name, table_info) == DB_SUCCESS) {
+    return DB_TABLE_ALREADY_EXIST;
+  }
+
+  std::vector<Column *> columns;
+  std::vector<string> column_names;
+  std::vector<string> column_type_strs;
+  std::vector<uint32_t> lengths;
+  std::vector<bool> uniques;
+  std::set<string> primarys;
+
+  auto column_definition_list = ast->child_->next_;
+
+  for (auto column = column_definition_list->child_; column != nullptr; column = column->next_) {
+
+    if (column->type_ == kNodeColumnDefinition) {
+      column_names.push_back(column->child_->val_);
+      column_type_strs.push_back(column->child_->next_->val_);
+
+      if (column_type_strs.back() == "char") {
+        lengths.push_back(std::stoi(column->child_->next_->child_->val_));
+      } else {
+        lengths.push_back(0);
+      }
+
+      if (column->val_ == "u") {
+        uniques.push_back(1);
+      } else {
+        uniques.push_back(0);
+      }
+
+    } else if (column->type_ == kNodeColumnList) {
+      for (auto primary_key = column->child_; primary_key != nullptr; primary_key = primary_key->next_) {
+        primarys.insert(primary_key->val_);
+      }
+    } else {
+      std::cerr << "Invaild SyntaxNode" << std::endl;
+      return DB_FAILED;
+    }
+  }
+  
+  for (auto i = 0; i < column_names.size(); i++) {
+
+    bool nullable = true;
+    if (primarys.find(column_names[i]) != primarys.end()) {
+      nullable = false;
+    }
+
+    Column *pcolumn;
+    if (column_type_strs[i] == "int") {
+      pcolumn = new Column(column_names[i], kTypeInt, i, nullable, uniques[i]);
+    } else if (column_type_strs[i] == "float") {
+      pcolumn = new Column(column_names[i], kTypeFloat, i, nullable, uniques[i]);
+    } else if (column_type_strs[i] == "char") {
+      pcolumn = new Column(column_names[i], kTypeChar, lengths[i], i, nullable, uniques[i]);
+    } else {
+      std::cerr << "Invalid Type" << std::endl;
+      return DB_FAILED;
+    }
+    columns.push_back(pcolumn);
+  }
+
+  TableSchema * table_schema = new TableSchema(columns);
+  Txn * txn;
+  dbs_[current_db_]->catalog_mgr_->CreateTable(table_name, table_schema, txn, table_info);
+  return DB_SUCCESS;
 }
 
 /**
@@ -354,7 +428,20 @@ dberr_t ExecuteEngine::ExecuteDropTable(pSyntaxNode ast, ExecuteContext *context
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteDropTable" << std::endl;
 #endif
- return DB_FAILED;
+  if (current_db_.empty()) {
+    std::cout << "No database selected" << std::endl;
+    return DB_FAILED;
+  }
+  
+  string table_name = ast->child_->val_;
+  TableInfo * table_info; 
+  if (dbs_[current_db_]->catalog_mgr_->GetTable(table_name, table_info) == DB_SUCCESS) {
+    dbs_[current_db_]->catalog_mgr_->DropTable(ast->child_->val_);
+  } else {
+    std::cout << "Table not exists" << std::endl;
+    return DB_FAILED;
+  }
+  return DB_SUCCESS;
 }
 
 /**

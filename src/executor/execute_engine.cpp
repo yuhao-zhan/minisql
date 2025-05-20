@@ -374,6 +374,10 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode ast, ExecuteContext *conte
 
       if (column_type_strs.back() == "char") {
         lengths.push_back(std::stoi(column->child_->next_->child_->val_));
+        if (lengths.back() <= 0) {
+          std::cerr << "Invalid Length" << std::endl;
+          return DB_FAILED;
+        }
       } else {
         lengths.push_back(0);
       }

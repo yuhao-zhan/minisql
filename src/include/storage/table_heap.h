@@ -103,6 +103,11 @@ class TableHeap {
    */
   inline page_id_t GetFirstPageId() const { return first_page_id_; }
 
+  /**
+   * @return if the table is empty
+   */
+  bool IsEmpty(Txn *txn) { return Begin(txn) == End(); }
+
  private:
   /**
    * create table heap and initialize first page

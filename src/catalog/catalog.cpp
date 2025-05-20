@@ -306,18 +306,19 @@ dberr_t CatalogManager::DropTable(const string &table_name) {
 
     // 3) 先删除table_name中所有的索引
     std::vector<IndexInfo *> indexes;
-    if (GetTableIndexes(table_name, indexes) != DB_SUCCESS) {
-        return DB_FAILED;
-    }
-    for (auto index : indexes){
+    if (GetTableIndexes(table_name, indexes) == DB_SUCCESS) {
+      for (auto index : indexes) {
         auto index_name = index->GetIndexName();
         if (DropIndex(table_name, index_name) != DB_SUCCESS) {
             return DB_FAILED;
         }
+      }
     }
 
     // 4) 删除表堆
-    table_info->GetTableHeap()->DeleteTable();
+    if (~table_info->GetTableHeap()->IsEmpty(nullptr)) {
+      table_info->GetTableHeap()->DeleteTable();
+    }
 
     // 5) 删除table_info
     delete table_info;

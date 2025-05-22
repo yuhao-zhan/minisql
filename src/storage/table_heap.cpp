@@ -152,15 +152,20 @@ bool TableHeap::GetTuple(Row *row, Txn *txn) {
 }
 
 void TableHeap::DeleteTable(page_id_t page_id) {
-  if (page_id != INVALID_PAGE_ID) {
-    auto temp_table_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(page_id));  // 删除table_heap
-    if (temp_table_page->GetNextPageId() != INVALID_PAGE_ID)
-      DeleteTable(temp_table_page->GetNextPageId());
-    buffer_pool_manager_->UnpinPage(page_id, false);
-    buffer_pool_manager_->DeletePage(page_id);
-  } else {
-    DeleteTable(first_page_id_);
-  }
+    auto next_page_id = first_page_id_;
+    while (next_page_id != INVALID_PAGE_ID) {
+        auto old_page_id = next_page_id;
+        cout << "Deleting page: " << old_page_id << endl;
+        auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(old_page_id));
+        assert(page != nullptr);
+        next_page_id = page->GetNextPageId();
+        cout << "Next page: " << next_page_id << endl;
+        buffer_pool_manager_->UnpinPage(old_page_id, false);
+        buffer_pool_manager_->DeletePage(old_page_id);
+    }
+    if (page_id != INVALID_PAGE_ID) {
+        buffer_pool_manager_->DeletePage(page_id);
+    }
 }
 
 /**

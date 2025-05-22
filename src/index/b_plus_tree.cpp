@@ -100,7 +100,7 @@ void BPlusTree::Destroy(page_id_t current_page_id) {
  * Helper function to decide whether current b+tree is empty
  */
 bool BPlusTree::IsEmpty() const {
-    cout << "root_page_id_: " << root_page_id_ << endl;
+    // cout << "root_page_id_: " << root_page_id_ << endl;
     return root_page_id_ == INVALID_PAGE_ID;
 }
 
@@ -113,16 +113,16 @@ bool BPlusTree::IsEmpty() const {
  * @return : true means key exists
  */
 bool BPlusTree::GetValue(const GenericKey *key, std::vector<RowId> &result, Txn *transaction) {
-    cout << "Enter GetValue" << endl;
+    // cout << "Enter GetValue" << endl;
     // 1. 如果树为空，直接返回 false
     if (IsEmpty()) {
-        cout << "Tree is empty" << endl;
+        // cout << "Tree is empty" << endl;
         return false;
     }
 
     // 2. 定位到包含目标 key 的叶子页并 pin
     Page *page = FindLeafPage(key);
-    cout << "FindLeafPage: " << page->GetPageId() << endl;
+    // cout << "FindLeafPage: " << page->GetPageId() << endl;
     if (page == nullptr) {
         // 没有找到对应的页（极少出现，防御性编程）
         return false;
@@ -160,28 +160,28 @@ bool BPlusTree::GetValue(const GenericKey *key, std::vector<RowId> &result, Txn 
 //bool BPlusTree::Insert(GenericKey *key, const RowId &value, Txn *transaction) {
 //    // 1. 如果树为空，直接插入新树
 //    if (IsEmpty()) {
-//        cout << "Start new tree" << endl;
+//        // cout << "Start new tree" << endl;
 //        StartNewTree(key, value);
 //        return true;
 //    }
 //
 //    // 2. 定位到包含目标 key 的叶子页并 pin
 //    Page *page = FindLeafPage(key);
-//    cout << "FindLeafPage: " << page->GetPageId() << endl;
+//    // cout << "FindLeafPage: " << page->GetPageId() << endl;
 //    if (page == nullptr) {
 //        return false;
 //    }
 //
 //    // 3. 将原始 Page* 数据区转换为叶子页类型
 //    auto *leaf = reinterpret_cast<LeafPage *>(page->GetData());
-//    cout << "Convert to LeafPage: " << leaf->GetPageId() << endl;
+//    // cout << "Convert to LeafPage: " << leaf->GetPageId() << endl;
 //
 //
 //    // 4. 在叶子页中插入 key 和 value
-//    cout << "Start InsertIntoLeaf" << endl;
+//    // cout << "Start InsertIntoLeaf" << endl;
 //    bool inserted = InsertIntoLeaf(key, value, transaction);
-//    cout << "InsertedSuccess?: " << inserted << endl;
-//    cout << "InsertIntoLeaf: " << leaf->GetPageId() << endl;
+//    // cout << "InsertedSuccess?: " << inserted << endl;
+//    // cout << "InsertIntoLeaf: " << leaf->GetPageId() << endl;
 //
 //    // 5. unpin 叶子页（插入时 pin，使用后必须 unpin；此处不做修改所以 is_dirty=false）
 //    buffer_pool_manager_->UnpinPage(leaf->GetPageId(), /*is_dirty=*/true);
@@ -192,7 +192,7 @@ bool BPlusTree::GetValue(const GenericKey *key, std::vector<RowId> &result, Txn 
 
 bool BPlusTree::Insert(GenericKey *key, const RowId &value, Txn *txn) {
     if (IsEmpty()) {
-        cout << "Start new tree" << endl;
+        // cout << "Start new tree" << endl;
         StartNewTree(key, value);
         return true;
     }
@@ -236,7 +236,7 @@ void BPlusTree::StartNewTree(GenericKey *key, const RowId &value) {
 
     // 4) **关键**：先更新成员变量
     root_page_id_ = new_root_id;
-    cout << "Update root page id: " << root_page_id_ << endl;
+    // cout << "Update root page id: " << root_page_id_ << endl;
 
 
     buffer_pool_manager_->UnpinPage(new_root_id, /*is_dirty=*/true);
@@ -255,10 +255,10 @@ void BPlusTree::StartNewTree(GenericKey *key, const RowId &value) {
  * keys return false, otherwise return true.
  */
 //bool BPlusTree::InsertIntoLeaf(GenericKey *key, const RowId &value, Txn *transaction) {
-//    cout << "Enter InsertIntoLeaf" << endl;
+//    // cout << "Enter InsertIntoLeaf" << endl;
 //    // 1. 找到目标叶子页（默认从根开始），并 pin
 //    Page *page = FindLeafPage(key, INVALID_PAGE_ID, false);
-//    cout << "FindLeafPage: " << page->GetPageId() << endl;
+//    // cout << "FindLeafPage: " << page->GetPageId() << endl;
 //    if (page == nullptr) {
 //        // 没有可插入的叶子页（极端情况）
 //        return false;
@@ -268,27 +268,27 @@ void BPlusTree::StartNewTree(GenericKey *key, const RowId &value) {
 //    // 2. 检查重复：若已存在相同 key，则释放叶子页并返回 false
 //    RowId tmp;
 //    if (leaf->Lookup(key, tmp, processor_)) {
-//        cout << "Duplicate key!!!" << endl;
+//        // cout << "Duplicate key!!!" << endl;
 //        buffer_pool_manager_->UnpinPage(leaf->GetPageId(), /*is_dirty=*/false);
 //        return false;
 //    }
-//    cout << "Lookup: " << leaf->GetPageId() << endl;
+//    // cout << "Lookup: " << leaf->GetPageId() << endl;
 //
 //    // 3. 执行插入
 //    int status = leaf->Insert(key, value, processor_);
 //    // 序列化一下
 //    // processor_.SerializeFromKey(//)
-//    // cout << "Insert: " << leaf->GetPageId() << endl;
+//    // // cout << "Insert: " << leaf->GetPageId() << endl;
 //
 //    // 4. 如果超出容量，则 split 并向父节点插入分裂出来的新页的第一个 key
 //    // if (leaf->GetSize() > leaf_max_size_) {
 //    if (status == -1) {
-//        cout << "LeafPage overflow: " << leaf->GetPageId() << endl;
+//        // cout << "LeafPage overflow: " << leaf->GetPageId() << endl;
 //        // split 会从 buffer pool 中 NewPage 并 pin 新页
 //        LeafPage *new_leaf = Split(leaf, transaction);
 //        // 提升 new_leaf 中最小的 key 到 parent
 //        GenericKey *promote_key = new_leaf->KeyAt(0);
-//        cout << "Promote key: " << promote_key << endl;
+//        // cout << "Promote key: " << promote_key << endl;
 //        InsertIntoParent(leaf, promote_key, new_leaf, transaction);
 //
 //
@@ -307,7 +307,7 @@ void BPlusTree::StartNewTree(GenericKey *key, const RowId &value) {
 //
 //    // 5. 释放原叶子页并标记为脏
 //    buffer_pool_manager_->UnpinPage(leaf->GetPageId(), /*is_dirty=*/true);
-//    //cout << "Unpin old leaf page: " << leaf->GetPageId() << endl;
+//    //// cout << "Unpin old leaf page: " << leaf->GetPageId() << endl;
 //    return true;
 //}
 
@@ -319,7 +319,7 @@ bool BPlusTree::InsertIntoLeaf(LeafPage *leaf, GenericKey *key,
     RowId tmp;
     if (leaf->Lookup(key, tmp, processor_)) {
         // duplicate：直接 unpin leaf 并返回 false
-        cout << "Duplicate key!!!" << endl;
+        // cout << "Duplicate key!!!" << endl;
         buffer_pool_manager_->UnpinPage(leaf->GetPageId(), /*is_dirty=*/false);
         return false;
     }
@@ -378,7 +378,7 @@ BPlusTreeInternalPage *BPlusTree::Split(InternalPage *node, Txn *transaction) {
 
 BPlusTreeLeafPage *BPlusTree::Split(LeafPage *node, Txn *transaction) {
     // 1. 申请新页（已 pin）
-    cout << "Split LeafPage: " << node->GetPageId() << endl;
+    // cout << "Split LeafPage: " << node->GetPageId() << endl;
     page_id_t new_page_id;
     Page *page = buffer_pool_manager_->NewPage(new_page_id);
     if (page == nullptr) {
@@ -391,16 +391,16 @@ BPlusTreeLeafPage *BPlusTree::Split(LeafPage *node, Txn *transaction) {
                    node->GetParentPageId(),
                    node->GetKeySize(),
                    leaf_max_size_);
-    cout << "Init new LeafPage: " << new_leaf->GetPageId() << endl;
+    // cout << "Init new LeafPage: " << new_leaf->GetPageId() << endl;
 
     // 3. 先接上原链表：new_leaf.next = node.next
     page_id_t old_next = node->GetNextPageId();
     new_leaf->SetNextPageId(old_next);
-    cout << "SetNextPageId: " << new_leaf->GetNextPageId() << endl;
+    // cout << "SetNextPageId: " << new_leaf->GetNextPageId() << endl;
 
     // 4. 搬半边元素：内部会做 node.next = new_leaf.page_id
     node->MoveHalfTo(new_leaf);
-    cout << "MoveHalfTo: " << node->GetPageId() << endl;
+    // cout << "MoveHalfTo: " << node->GetPageId() << endl;
 
     // 5. 返回新页（保持 pin，由调用者后面 unpin & 标记脏页）
     return new_leaf;
@@ -419,12 +419,12 @@ void BPlusTree::InsertIntoParent(BPlusTreePage *old_node, GenericKey *key, BPlus
     // 原节点页号 & 新节点页号
     page_id_t old_page_id = old_node->GetPageId();
     page_id_t new_page_id = new_node->GetPageId();
-    cout << "InsertIntoParent: old_node " << old_page_id << " new_node " << new_page_id << endl;
+    // cout << "InsertIntoParent: old_node " << old_page_id << " new_node " << new_page_id << endl;
 
     // 1) 如果 old_node 是根节点，则要新建一个根内部页
     if (old_node->IsRootPage()) {
         // a. 申请新页（已 pin）
-        cout << "Create new root page" << endl;
+        // cout << "Create new root page" << endl;
         page_id_t new_root_id;
         Page *p = buffer_pool_manager_->NewPage(new_root_id);
         if (p == nullptr) throw std::bad_alloc();
@@ -438,12 +438,12 @@ void BPlusTree::InsertIntoParent(BPlusTreePage *old_node, GenericKey *key, BPlus
 
         // c. 将 old_node 和 new_node 连接到新根，并插入 key
         root->PopulateNewRoot(old_page_id, key, new_page_id);
-        cout << "PopulateNewRoot: " << root->GetPageId() << endl;
+        // cout << "PopulateNewRoot: " << root->GetPageId() << endl;
 
         // d. 更新两棵子树的 parent_page_id
         old_node->SetParentPageId(new_root_id);
         new_node->SetParentPageId(new_root_id);
-        cout << "SetParentPageId: old_node " << old_node->GetPageId() << " new_node " << new_node->GetPageId() << endl;
+        // cout << "SetParentPageId: old_node " << old_node->GetPageId() << " new_node " << new_node->GetPageId() << endl;
 
         // e. 释放子树页 pin，标记为脏
         buffer_pool_manager_->UnpinPage(old_page_id, /*is_dirty=*/true);
@@ -451,10 +451,10 @@ void BPlusTree::InsertIntoParent(BPlusTreePage *old_node, GenericKey *key, BPlus
 
         // f. 更新树的根指针 & 写 header
         root_page_id_ = new_root_id;
-        cout << "Update root page id: " << root_page_id_ << endl;
+        // cout << "Update root page id: " << root_page_id_ << endl;
 
         UpdateRootPageId(/*insert_record=*/true);
-        cout << "Update header page" << endl;
+        // cout << "Update header page" << endl;
 
         // g. 释放新根页 pin
         buffer_pool_manager_->UnpinPage(new_root_id, /*is_dirty=*/true);
@@ -761,7 +761,7 @@ bool BPlusTree::AdjustRoot(BPlusTreePage *old_root_node) {
         buffer_pool_manager_->DeletePage(old_root_id);
         // 设置新的 root_page_id_
         root_page_id_ = child_id;
-        cout << "Update root page id: " << root_page_id_ << endl;
+        // cout << "Update root page id: " << root_page_id_ << endl;
         // 更新新的根在 header page
         UpdateRootPageId(/*insert_record=*/0);
         // 把新根的 parent_id 设为 INVALID
@@ -1029,21 +1029,21 @@ void BPlusTree::ToGraph(BPlusTreePage *page, BufferPoolManager *bpm, std::ofstre
 void BPlusTree::ToString(BPlusTreePage *page, BufferPoolManager *bpm) const {
     if (page->IsLeafPage()) {
         auto *leaf = reinterpret_cast<LeafPage *>(page);
-        std::cout << "Leaf Page: " << leaf->GetPageId() << " parent: " << leaf->GetParentPageId()
-                  << " next: " << leaf->GetNextPageId() << std::endl;
+        // std::// cout << "Leaf Page: " << leaf->GetPageId() << " parent: " << leaf->GetParentPageId()
+                  // << " next: " << leaf->GetNextPageId() << std::endl;
         for (int i = 0; i < leaf->GetSize(); i++) {
-            std::cout << leaf->KeyAt(i) << ",";
+            // std::// cout << leaf->KeyAt(i) << ",";
         }
-        std::cout << std::endl;
-        std::cout << std::endl;
+        // std::// cout << std::endl;
+        // std::// cout << std::endl;
     } else {
         auto *internal = reinterpret_cast<InternalPage *>(page);
-        std::cout << "Internal Page: " << internal->GetPageId() << " parent: " << internal->GetParentPageId() << std::endl;
+        // std::// cout << "Internal Page: " << internal->GetPageId() << " parent: " << internal->GetParentPageId() << std::endl;
         for (int i = 0; i < internal->GetSize(); i++) {
-            std::cout << internal->KeyAt(i) << ": " << internal->ValueAt(i) << ",";
+            // std::// cout << internal->KeyAt(i) << ": " << internal->ValueAt(i) << ",";
         }
-        std::cout << std::endl;
-        std::cout << std::endl;
+        // std::// cout << std::endl;
+        // std::// cout << std::endl;
         for (int i = 0; i < internal->GetSize(); i++) {
             ToString(reinterpret_cast<BPlusTreePage *>(bpm->FetchPage(internal->ValueAt(i))->GetData()), bpm);
             bpm->UnpinPage(internal->ValueAt(i), false);

@@ -4,18 +4,18 @@
  * TODO: Student Implement
  */
 uint32_t Row::SerializeTo(char *buf, Schema *schema) const {
-    std::cout << "Enter serialize row" << std::endl;
+    // std::cout << "Enter serialize row" << std::endl;
     ASSERT(schema != nullptr, "Invalid schema before serialize.");
     ASSERT(schema->GetColumnCount() == fields_.size(), "Fields size do not match schema's column size.");
     char *pos = buf;
-    std::cout << "pos: " << static_cast<void *>(pos) << std::endl;
+    // std::cout << "pos: " << static_cast<void *>(pos) << std::endl;
     // 1. 写入 RowId（page_id + slot_num 各 4 字节）
-    std::cout << "RowId: " << rid_.GetPageId() << ", " << rid_.GetSlotNum() << std::endl;
+    // std::cout << "RowId: " << rid_.GetPageId() << ", " << rid_.GetSlotNum() << std::endl;
     MACH_WRITE_UINT32(pos, rid_.GetPageId());
-    std::cout << "RowId page_id: " << MACH_READ_UINT32(pos) << std::endl;
+    // std::cout << "RowId page_id: " << MACH_READ_UINT32(pos) << std::endl;
     pos += sizeof(uint32_t);
     MACH_WRITE_UINT32(pos, rid_.GetSlotNum());
-    std::cout << "RowId slot_num: " << MACH_READ_UINT32(pos) << std::endl;
+    // std::cout << "RowId slot_num: " << MACH_READ_UINT32(pos) << std::endl;
     pos += sizeof(uint32_t);
 
     // 2. 写入列数
@@ -63,26 +63,26 @@ uint32_t Row::SerializeKeyTo(char *buf, Schema *schema) const {
 
 
 uint32_t Row::DeserializeFrom(char *buf, Schema *schema) {
-    std::cout << "Start deserialize row" << std::endl;
+    // std::cout << "Start deserialize row" << std::endl;
     ASSERT(schema != nullptr, "Invalid schema before serialize.");
     ASSERT(fields_.empty(), "Non empty field in row.");
     char *pos = buf;
-    std::cout << "pos: " << static_cast<void *>(pos) << std::endl;
+    // std::cout << "pos: " << static_cast<void *>(pos) << std::endl;
     // 1. 读 RowId
     uint32_t page_id = MACH_READ_UINT32(pos);
-    std::cout << "RowId page_id: " << page_id << std::endl;
+    // std::cout << "RowId page_id: " << page_id << std::endl;
     pos += sizeof(uint32_t);
     uint32_t slot_num = MACH_READ_UINT32(pos);
-    std::cout << "RowId slot_num: " << slot_num << std::endl;
+    // std::cout << "RowId slot_num: " << slot_num << std::endl;
     pos += sizeof(uint32_t);
     rid_.Set(page_id, slot_num);
-    std::cout << "RowId: " << rid_.GetPageId() << ", " << rid_.GetSlotNum() << std::endl;
+    // std::cout << "RowId: " << rid_.GetPageId() << ", " << rid_.GetSlotNum() << std::endl;
 
     // 2. 读列数并校验
     uint32_t col_count = MACH_READ_UINT32(pos);
     pos += sizeof(uint32_t);
-    std::cout << "col_count: " << col_count << std::endl;
-    std::cout << "schema col count: " << schema->GetColumnCount() << std::endl;
+    // std::cout << "col_count: " << col_count << std::endl;
+    // std::cout << "schema col count: " << schema->GetColumnCount() << std::endl;
     ASSERT(col_count == schema->GetColumnCount(), "Column count mismatch in row deserialize.");
 
     // 3. 读 null bitmap

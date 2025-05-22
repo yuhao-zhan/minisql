@@ -49,6 +49,7 @@ void MinisqlParserSetError(char *msg) {
 }
 
 pSyntaxNode MinisqlGetParserRootNode() {
+    printf("minisql_get_parser_root_node: %p\n", minisql_parser_root_node_);
   return minisql_parser_root_node_;
 }
 

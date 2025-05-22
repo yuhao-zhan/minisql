@@ -135,36 +135,55 @@ CatalogManager::~CatalogManager() {
 /**
  * TODO: Student Implement
  */
-dberr_t CatalogManager::CreateTable(const string &table_name, TableSchema *schema, Txn *txn, TableInfo *&table_info) {
-    // 1) 生成表 ID 和页 ID
+dberr_t CatalogManager::CreateTable(const string &table_name,
+                                    TableSchema *schema,
+                                    Txn *txn,
+                                    TableInfo *&table_info) {
+    // 1) pick a new table ID
     table_id_t table_id = next_table_id_.fetch_add(1);
-    page_id_t page_id;
-    Page *page = buffer_pool_manager_->NewPage(page_id);
-    if (page == nullptr) return DB_FAILED;
-    ASSERT(page_id != CATALOG_META_PAGE_ID, "Create A Page with PageID = CATALOG_META_PAGE_ID");  // 确保我们不是在第 0 页
-    /** You should use DeepCopySchema in CreateTable. **/
-     auto schema_copy = Schema::DeepCopySchema(schema);
-    // 2) 创建表元数据
-    TableMetadata *tbl_meta = TableMetadata::Create(table_id, table_name, page_id, schema_copy);
-    // 3) 创建表堆
-    TableHeap *heap = TableHeap::Create(buffer_pool_manager_, page_id, schema_copy, log_manager_, lock_manager_);
-    // 4) 创建表信息
+
+    // 2) allocate a page in the *catalog* file to hold your TableMetadata
+    page_id_t meta_page_id;
+    Page *meta_page = buffer_pool_manager_->NewPage(meta_page_id);
+    if (meta_page == nullptr) return DB_FAILED;
+    ASSERT(meta_page_id != CATALOG_META_PAGE_ID,
+           "Catalog metadata page collision");
+
+    // 3) deep-copy the schema
+    auto schema_copy = Schema::DeepCopySchema(schema);
+
+    // 4) create the *data* heap — this will internally call NewPage + Init()
+    auto *heap = TableHeap::Create(buffer_pool_manager_,
+                                   schema_copy,
+                                   txn,
+                                   log_manager_,
+                                   lock_manager_);
+    // now heap->GetFirstPageId() is a fully Init()’d page
+    page_id_t first_data_page = heap->GetFirstPageId();
+
+    // 5) create your TableMetadata with the *data* page ID
+    auto *tbl_meta = TableMetadata::Create(table_id,
+                                           table_name,
+                                           first_data_page,
+                                           schema_copy);
+
+    // 6) serialize that metadata out to the catalog page
+    tbl_meta->SerializeTo(meta_page->GetData());
+    buffer_pool_manager_->UnpinPage(meta_page_id, /*is_dirty=*/true);
+
+    // 7) wire up your in-memory maps
     table_info = TableInfo::Create();
     table_info->Init(tbl_meta, heap);
-    // 5) 将表信息保存到 maps
-    tables_[table_id] = table_info;
+    tables_[table_id]      = table_info;
     table_names_[table_name] = table_id;
-    // 6) 将表元数据序列化到页中
-    char *buf = page->GetData();
-    tbl_meta->SerializeTo(buf);
-    buffer_pool_manager_->UnpinPage(page_id, /*is_dirty=*/true);
-    // 7) 更新 catalog_meta_ 中的表元数据页
-    catalog_meta_->GetTableMetaPages()->emplace(table_id, page_id);
-    // 8) 更新 catalog_meta_ 页
+    catalog_meta_->GetTableMetaPages()->emplace(table_id, meta_page_id);
+
+    // 8) persist the updated catalog‐meta
     FlushCatalogMetaPage();
-    // 9) 返回表信息
+
     return DB_SUCCESS;
 }
+
 
 /**
  * TODO: Student Implement
@@ -297,16 +316,19 @@ dberr_t CatalogManager::DropTable(const string &table_name) {
     // 1) 查找表 ID
     auto it = table_names_.find(table_name);
     if (it == table_names_.end()) return DB_FAILED;
+    cout << "DropTable (name): " << table_name << endl;
     table_id_t table_id = it->second;
 
     // 2) 查找表信息
     auto it2 = tables_.find(table_id);
     if (it2 == tables_.end()) return DB_FAILED;
+    cout << "DropTable (id): " << table_id << endl;
     TableInfo *table_info = it2->second;
 
     // 3) 先删除table_name中所有的索引
     std::vector<IndexInfo *> indexes;
     if (GetTableIndexes(table_name, indexes) == DB_SUCCESS) {
+        cout << "Found indexes for table: " << table_name << endl;
       for (auto index : indexes) {
         auto index_name = index->GetIndexName();
         if (DropIndex(table_name, index_name) != DB_SUCCESS) {
@@ -314,13 +336,22 @@ dberr_t CatalogManager::DropTable(const string &table_name) {
         }
       }
     }
-
-    // 4) 删除表堆
-    if (~table_info->GetTableHeap()->IsEmpty(nullptr)) {
-      table_info->GetTableHeap()->DeleteTable();
+    else {
+        cout << "No indexes found for table: " << table_name << endl;
     }
 
+    // 4) 删除表堆
+    cout << "Deleting table heap ..." << endl;
+    TableHeap *table_heap = table_info->GetTableHeap();
+    if (table_heap != nullptr) {
+        cout << "Table heap is not null, deleting ..." << endl;
+        cout << "The first page of table heap is: " << table_heap->GetFirstPageId() << endl;
+        table_info->GetTableHeap()->DeleteTable(table_heap->GetFirstPageId());
+    }
+
+
     // 5) 删除table_info
+    cout << "Deleting table info ..." << endl;
     delete table_info;
     tables_.erase(it2);
     table_names_.erase(it);

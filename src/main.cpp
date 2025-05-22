@@ -70,6 +70,7 @@ int main(int argc, char **argv) {
       printer.PrintTree(syntax_tree_file_mgr[syntax_tree_id++]);
     }
 
+    cout << "Start to execute sql..." << endl;
     auto result = engine.Execute(MinisqlGetParserRootNode());
 
     // clean memory after parse

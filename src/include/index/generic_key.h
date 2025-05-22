@@ -28,14 +28,14 @@ class KeyManager {
   }
 
   inline void DeserializeToKey(const GenericKey *key_buf, Row &key, Schema *schema) const {
-      std::cout << "key_buf: " << (void *)key_buf << std::endl;
+     // std::cout << "key_buf: " << (void *)key_buf << std::endl;
     [[maybe_unused]] uint32_t ofs = key.DeserializeFrom(const_cast<char *>(key_buf->data), schema);
     ASSERT(ofs <= (uint32_t)key_size_, "Index key size exceed max key size.");
   }
 
   // compare
   [[nodiscard]] inline int CompareKeys(const GenericKey *lhs, const GenericKey *rhs) const {
-      std::cout << "lhs: " << (void *)lhs << " rhs: " << (void *)rhs << std::endl;
+     // std::cout << "lhs: " << (void *)lhs << " rhs: " << (void *)rhs << std::endl;
     //    ASSERT(malloc_usable_size((void *)&lhs) == malloc_usable_size((void *)&rhs), "key size not match.");
     uint32_t column_count = key_schema_->GetColumnCount();
     Row rhs_key(INVALID_ROWID);
@@ -45,7 +45,7 @@ class KeyManager {
     DeserializeToKey(rhs, rhs_key, key_schema_);
     DeserializeToKey(lhs, lhs_key, key_schema_);
 
-    std::cout << "Deserialization finish!" << std::endl;
+    // std::cout << "Deserialization finish!" << std::endl;
     for (uint32_t i = 0; i < column_count; i++) {
       Field *lhs_value = lhs_key.GetField(i);
       Field *rhs_value = rhs_key.GetField(i);

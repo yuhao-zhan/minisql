@@ -29,21 +29,21 @@ dberr_t BPlusTreeIndex::InsertEntry(const Row &key, RowId row_id, Txn *txn) {
   Row key_with_rid = key;
   key_with_rid.SetRowId(row_id);
   GenericKey *index_key = processor_.InitKey();
-  cout << "Start insert index key: " << row_id.GetPageId() << ", " << row_id.GetSlotNum() << endl;
+  // cout<< "Start insert index key: " << row_id.GetPageId() << ", " << row_id.GetSlotNum() << endl;
   processor_.SerializeFromKey(index_key, key_with_rid, key_schema_);
-  cout << "index_key after processor_.SerializeFromKey: " << index_key << endl;
-  cout << "Serialized key: " << key_with_rid.GetRowId().GetPageId() << ", " << key_with_rid.GetRowId().GetSlotNum() << endl;
+  // cout<< "index_key after processor_.SerializeFromKey: " << index_key << endl;
+  // cout<< "Serialized key: " << key_with_rid.GetRowId().GetPageId() << ", " << key_with_rid.GetRowId().GetSlotNum() << endl;
 
   bool status = container_.Insert(index_key, row_id, txn);
 
-  cout << "End insert index key: " << row_id.GetPageId() << ", " << row_id.GetSlotNum() << endl;
+  // cout<< "End insert index key: " << row_id.GetPageId() << ", " << row_id.GetSlotNum() << endl;
   //  TreeFileManagers mgr("tree_");
   //  static int i = 0;
   //  if (i % 10 == 0) container_.PrintTree(mgr[i]);
   //  i++;
 
   if (!status) {
-      cout << "Failed to insert index key: " << row_id.GetPageId() << ", " << row_id.GetSlotNum() << endl;
+      // cout<< "Failed to insert index key: " << row_id.GetPageId() << ", " << row_id.GetSlotNum() << endl;
       free(index_key);
     return DB_FAILED;
   }
@@ -62,10 +62,10 @@ dberr_t BPlusTreeIndex::RemoveEntry(const Row &key, RowId row_id, Txn *txn) {
 dberr_t BPlusTreeIndex::ScanKey(const Row &key, vector<RowId> &result, Txn *txn, string compare_operator) {
   GenericKey *index_key = processor_.InitKey();
   processor_.SerializeFromKey(index_key, key, key_schema_);
-  cout << "Start scan index key: " << key.GetRowId().GetPageId() << ", " << key.GetRowId().GetSlotNum() << endl;
+  // cout<< "Start scan index key: " << key.GetRowId().GetPageId() << ", " << key.GetRowId().GetSlotNum() << endl;
   auto end_iter = GetEndIterator();
-  cout << "index_key after processor_.SerializeFromKey: " << index_key << endl;
-  cout << "Compare operator: " << compare_operator << endl;
+  // cout<< "index_key after processor_.SerializeFromKey: " << index_key << endl;
+  // cout<< "Compare operator: " << compare_operator << endl;
   if (compare_operator == "=") {
     container_.GetValue(index_key, result, txn);
   } else if (compare_operator == ">") {

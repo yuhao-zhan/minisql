@@ -113,16 +113,16 @@ std::pair<GenericKey *, RowId> LeafPage::GetItem(int index) { return {KeyAt(inde
  * @return page size after insertion
  */
 int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) {
-    cout << "Enter LeafPage::Insert" << endl;
+    // cout << "Enter LeafPage::Insert" << endl;
     // 检查是否已满
-    cout << "Size " << GetSize() << " MaxSize " << GetMaxSize() << endl;
+    // cout << "Size " << GetSize() << " MaxSize " << GetMaxSize() << endl;
     if (GetSize() >= GetMaxSize()) {
         return -1; // 页已满，无法插入
     }
 
     // 找到插入位置
     int index = KeyIndex(key, KM);
-    cout << "index: " << index << endl;
+    // cout << "index: " << index << endl;
 
     // 检查是否已存在相同的key
     if (index < GetSize() && KM.CompareKeys(KeyAt(index), key) == 0) {
@@ -135,12 +135,12 @@ int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) 
 
     // 插入新元素
     SetKeyAt(index, key);
-    cout << "SetKeyAt: " << KeyAt(index) << endl;
+    // cout << "SetKeyAt: " << KeyAt(index) << endl;
     SetValueAt(index, value);
 
     // 更新页大小
     IncreaseSize(1);
-    cout << "Current size (after insertion): " << GetSize() << endl;
+    // cout << "Current size (after insertion): " << GetSize() << endl;
 
     return GetSize();
 }
@@ -185,23 +185,23 @@ void LeafPage::CopyNFrom(void *src, int size) {
  * If the key does not exist, then return false
  */
 bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM) {
-    cout << "Enter LeafPage::Lookup" << endl;
+    // cout << "Enter LeafPage::Lookup" << endl;
     // 找到第一个 大于/等于 键的索引
     int index = KeyIndex(key, KM);
-    cout << "index: " << index << endl;
+    // cout << "index: " << index << endl;
     // **边界检查**：如果 index 已经等于当前大小，就说明要插入到尾部，不存在重复
     if (index >= GetSize()) {
-        cout << "Key not found index: " << index << " >= Size:" << GetSize() << endl;
+        // cout << "Key not found index: " << index << " >= Size:" << GetSize() << endl;
         return false;
     }
 
     // 看看是否存在相同的键
     if (KM.CompareKeys(KeyAt(index), key) == 0) {
-        cout << "Found key: " << KeyAt(index) << endl;
+        // cout << "Found key: " << KeyAt(index) << endl;
         value = ValueAt(index);
         return true; // 找到键
     }
-    cout << "Key not found" << endl;
+    // cout << "Key not found" << endl;
     return false; // 没有找到键
 }
 

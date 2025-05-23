@@ -455,7 +455,41 @@ dberr_t ExecuteEngine::ExecuteShowIndexes(pSyntaxNode ast, ExecuteContext *conte
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteShowIndexes" << std::endl;
 #endif
-  return DB_FAILED;
+  if (current_db_.empty()) {
+    cout << "No database selected" << endl;
+    return DB_FAILED;
+  }
+
+  vector<TableInfo *> tables;
+  if (dbs_[current_db_]->catalog_mgr_->GetTables(tables) == DB_FAILED) {
+    cout << "Empty set (0.00 sec)" << endl;
+    return DB_FAILED;
+  }
+
+  vector<IndexInfo *> indexes;
+  for (const auto& table : tables) {
+    auto table_name = table->GetTableName();
+    dbs_[current_db_]->catalog_mgr_->GetTableIndexes(table_name, indexes);
+  }
+
+  string index_in_db("Indexes_in_" + current_db_);
+  uint max_width = index_in_db.length();
+
+  for (const auto &itr : indexes) {
+    if (itr->GetIndexName().length() > max_width) max_width = itr->GetIndexName().length();
+  }
+
+  cout << "+" << setfill('-') << setw(max_width + 2) << ""
+       << "+" << endl;
+  cout << "| " << std::left << setfill(' ') << setw(max_width) << index_in_db << " |" << endl;
+  cout << "+" << setfill('-') << setw(max_width + 2) << ""
+       << "+" << endl;
+  for (const auto &itr : indexes) {
+    cout << "| " << std::left << setfill(' ') << setw(max_width) << itr->GetIndexName() << " |" << endl;
+  }
+  cout << "+" << setfill('-') << setw(max_width + 2) << ""
+       << "+" << endl;
+  return DB_SUCCESS;
 }
 
 /**

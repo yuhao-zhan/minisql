@@ -120,11 +120,17 @@ TableIterator &TableIterator::operator++() {
         rid_ = next_rid;
         auto np = reinterpret_cast<TablePage *>(
                 table_heap_->buffer_pool_manager_->FetchPage(rid_.GetPageId()));
-        np->RLatch();
-        np->GetTuple(&cur_row_, table_heap_->schema_, txn_,
-                     table_heap_->lock_manager_);
-        np->RUnlatch();
-        table_heap_->buffer_pool_manager_->UnpinPage(rid_.GetPageId(), false);
+
+        bool ok = false;
+        if (np != nullptr) {
+          np->RLatch();
+          ok = np->GetTuple(&cur_row_, table_heap_->schema_, txn_, table_heap_->lock_manager_);
+          np->RUnlatch();
+          table_heap_->buffer_pool_manager_->UnpinPage(rid_.GetPageId(), false);
+        }
+        if (!ok) {
+            return ++(*this);
+        }
     } else {
         // 4) 没有下一个了 → 到达 end()
         table_heap_ = nullptr;

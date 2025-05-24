@@ -175,24 +175,24 @@ TableIterator TableHeap::Begin(Txn *txn) {
     page_id_t pid = first_page_id_;
     // 遍历链表中所有页面，找到第一个有 tuple 的位置
     while (pid != INVALID_PAGE_ID) {
-    auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(pid));
-    if (page == nullptr) {
+      auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(pid));
+      if (page == nullptr) {
         break;  // 无法取到页，直接退出
-    }
-    // 锁住页面，找第一个 tuple
-    page->RLatch();
-    RowId first_rid;
-    bool ok = page->GetFirstTupleRid(&first_rid);
-    page->RUnlatch();
-    // 释放页面引用，不标记脏
-    buffer_pool_manager_->UnpinPage(pid, /*is_dirty=*/false);
+      }
+      // 锁住页面，找第一个 tuple
+      page->RLatch();
+      RowId first_rid;
+      bool ok = page->GetFirstTupleRid(&first_rid);
+      page->RUnlatch();
+      // 释放页面引用，不标记脏
+      buffer_pool_manager_->UnpinPage(pid, /*is_dirty=*/false);
 
-    if (ok) {
+      if (ok && first_rid.Get() != INVALID_ROWID.Get()) {
         // 找到合法的 tuple，返回指向它的迭代器
         return TableIterator(this, first_rid, txn);
-    }
-    // 否则跳到下一页继续
-    pid = page->GetNextPageId();
+      }
+      // 否则跳到下一页继续
+      pid = page->GetNextPageId();
     }
     // 整个表都没有 tuple，返回 end()
     return End();

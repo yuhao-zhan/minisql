@@ -19,6 +19,12 @@
 #include "parser/syntax_tree_printer.h"
 #include "utils/tree_file_mgr.h"
 
+extern "C" {
+int yyparse(void);
+#include "parser/minisql_lex.h"
+#include "parser/parser.h"
+}
+
 ExecuteEngine::ExecuteEngine() {
   char path[] = "./databases";
   DIR *dir;
@@ -499,7 +505,24 @@ dberr_t ExecuteEngine::ExecuteCreateIndex(pSyntaxNode ast, ExecuteContext *conte
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteCreateIndex" << std::endl;
 #endif
-  return DB_FAILED;
+  if (current_db_.empty()) {
+    cout << "No database selected" << endl;
+    return DB_FAILED;
+  }
+
+  string index_name = ast->child_->val_;
+  string table_name = ast->child_->next_->val_;
+  auto keys_node = ast->child_->next_->next_;
+  vector<string> keys;
+  for (auto column = keys_node->child_; column != nullptr; column = column->next_) {
+    keys.push_back(column->val_);
+  }
+
+  IndexInfo * index_info;
+  string index_type;
+  dbs_[current_db_]->catalog_mgr_->CreateIndex(table_name, index_name, keys, nullptr, index_info, index_type);
+  std::cout << "Index Created Successfully!" << std::endl;
+  return DB_SUCCESS;
 }
 
 /**
@@ -509,6 +532,24 @@ dberr_t ExecuteEngine::ExecuteDropIndex(pSyntaxNode ast, ExecuteContext *context
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteDropIndex" << std::endl;
 #endif
+  if (current_db_.empty()) {
+    cout << "No database selected" << endl;
+    return DB_FAILED;
+  }
+
+  string index_name = ast->child_->val_;
+
+  vector<TableInfo* > tables;
+  dbs_[current_db_]->catalog_mgr_->GetTables(tables);
+
+  for (auto table: tables) {
+    if (dbs_[current_db_]->catalog_mgr_->DropIndex(table->GetTableName(), index_name) == DB_SUCCESS){
+      std::cout << "Index Dropped Successfully" << std::endl;
+      return DB_SUCCESS;
+    }
+  }
+
+  std::cout << "No Such Index" << std::endl;
   return DB_FAILED;
 }
 
@@ -540,7 +581,63 @@ dberr_t ExecuteEngine::ExecuteExecfile(pSyntaxNode ast, ExecuteContext *context)
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteExecfile" << std::endl;
 #endif
-  return DB_FAILED;
+  string filename = ast->child_->val_;
+  std::ifstream file(filename);
+  if (!file.is_open()) return DB_FAILED;
+
+  const int buf_size = 1024;
+  char cmd[buf_size];
+
+  while (!file.eof()) {
+    memset(cmd, 0, buf_size);
+    int i = 0; 
+    char ch;
+    while (!file.eof() && (ch=file.get()) != ';') {
+      cmd[i++] = ch;
+    }
+    cmd[i] = ch;
+    file.get();
+
+    YY_BUFFER_STATE bp = yy_scan_string(cmd);
+
+    if (bp == nullptr) {
+      LOG(ERROR) << "Failed to create yy buffer state." << std::endl;
+      exit(1);
+    }
+    yy_switch_to_buffer(bp);
+
+    // init parser module
+    MinisqlParserInit();
+
+    // parse
+    yyparse();
+
+    // parse result handle
+    if (MinisqlParserGetError()) {
+      // error
+      printf("%s\n", MinisqlParserGetErrorMessage());
+    } else {
+      // Comment them out if you don't need to debug the syntax tree
+      printf("[INFO] Sql syntax parse ok!\n");
+    }
+
+    cout << "Start to execute sql..." << endl;
+    auto result = Execute(MinisqlGetParserRootNode());
+
+    // clean memory after parse
+    MinisqlParserFinish();
+    yy_delete_buffer(bp);
+    yylex_destroy();
+
+    // quit condition
+    ExecuteInformation(result);
+    if (result == DB_QUIT) {
+      break;
+    }
+  }
+
+  std::cout << "File Executed Successfully" << std::endl;
+  return DB_SUCCESS;
 }
 
 /**
@@ -550,5 +647,8 @@ dberr_t ExecuteEngine::ExecuteQuit(pSyntaxNode ast, ExecuteContext *context) {
 #ifdef ENABLE_EXECUTE_DEBUG
   LOG(INFO) << "ExecuteQuit" << std::endl;
 #endif
- return DB_FAILED;
+  current_db_.clear();
+  std:: cout << "Bye" << std::endl;
+  exit(0);
+ return DB_SUCCESS;
 }

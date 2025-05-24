@@ -162,6 +162,16 @@ void TablePage::RollbackDelete(const RowId &rid, Txn *txn, LogManager *log_manag
 }
 
 bool TablePage::GetTuple(Row *row, Schema *schema, Txn *txn, LockManager *lock_manager) {
+  // 添加调试信息
+  std::cout << "GetTuple called with row: " << (row ? "not null" : "null") 
+            << ", rowid: " << row->GetRowId().Get() << std::endl;
+  std::cout << "GetTuple called with schema: " << (schema ? "not null" : "null") 
+            << ", schemaid: " << std::endl;
+  std::cout << "GetTuple called with txn: " << (txn ? "not null" : "null") 
+            << ", txnid: " << std::endl;
+  std::cout << "GetTuple called with lock_manager: " << (lock_manager ? "not null" : "null") 
+            << ", lock_managerid: " << std::endl;
+
   ASSERT(row != nullptr && row->GetRowId().Get() != INVALID_ROWID.Get(), "Invalid row.");
   // Get the current slot number.
   uint32_t slot_num = row->GetRowId().GetSlotNum();

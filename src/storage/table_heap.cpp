@@ -66,46 +66,50 @@ bool TableHeap::MarkDelete(const RowId &rid, Txn *txn) {
 /**
  * TODO: Student Implement
  */
-bool TableHeap::UpdateTuple(Row &row, const RowId &rid, Txn *txn) {
-    // 找到rid所在的页
-    auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));
+bool TableHeap::UpdateTuple(Row &new_row, const RowId &rid, Txn *txn) {
+    page_id_t pid = rid.GetPageId();
+    auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(pid));
     if (page == nullptr) {
         return false;
     }
-    // 给old_row赋值
+
+    // —— 第一步，用 old_row 读取旧值，确保这个行存在 ——
     Row old_row;
+    old_row.SetRowId(rid);
     page->WLatch();
     bool ok = page->GetTuple(&old_row, schema_, txn, lock_manager_);
     page->WUnlatch();
+    // 如果读失败，unpin 并返回
     if (!ok) {
-        buffer_pool_manager_->UnpinPage(page->GetTablePageId(), false);
+        buffer_pool_manager_->UnpinPage(pid, false);
         return false;
     }
 
-    // 尝试更新
+    // —— 关键：要给 page->UpdateTuple 一个空 fields_ 的 Row ——
+    Row fresh_row_for_update;
+    fresh_row_for_update.SetRowId(rid);
     page->WLatch();
-    ok = page->UpdateTuple(row, &old_row, schema_, txn, lock_manager_, log_manager_);
+    ok = page->UpdateTuple(new_row, &fresh_row_for_update, schema_, txn, lock_manager_, log_manager_);
     page->WUnlatch();
-    buffer_pool_manager_->UnpinPage(page->GetTablePageId(), ok);
+    // 完成这次访问后 unpin
+    buffer_pool_manager_->UnpinPage(pid, ok);
+
     if (!ok) {
-        // 如果更新失败，说明新行太大了，先删除旧行
+        // 空间不足时：逻辑删除 + 插入
         MarkDelete(rid, txn);
-        // 然后插入新行
-        ok = InsertTuple(row, txn);
-        if (!ok) {
-            // 插入失败，回滚
+        bool inserted = InsertTuple(new_row, txn);
+        if (!inserted) {
             RollbackDelete(rid, txn);
         }
-        return ok;
+        return inserted;
     }
-    // 更新成功
-    // 将RowId为rid的记录old_row替换成新的记录new_row，并将new_row的RowId通过new_row.rid_返回
-    // 这里的old_row是一个临时变量，不能直接返回
-    // 需要将old_row的值复制到row中
-    row.SetRowId(rid);
-    return true;
 
+    // 更新成功，恢复 new_row 的 RowId
+    new_row.SetRowId(rid);
+    return true;
 }
+
+
 
 /**
  * TODO: Student Implement
@@ -155,11 +159,11 @@ void TableHeap::DeleteTable(page_id_t page_id) {
     auto next_page_id = first_page_id_;
     while (next_page_id != INVALID_PAGE_ID) {
         auto old_page_id = next_page_id;
-        cout << "Deleting page: " << old_page_id << endl;
+        // // cout << "Deleting page: " << old_page_id << endl;
         auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(old_page_id));
         assert(page != nullptr);
         next_page_id = page->GetNextPageId();
-        cout << "Next page: " << next_page_id << endl;
+        // cout << "Next page: " << next_page_id << endl;
         buffer_pool_manager_->UnpinPage(old_page_id, false);
         buffer_pool_manager_->DeletePage(old_page_id);
     }
@@ -173,26 +177,29 @@ void TableHeap::DeleteTable(page_id_t page_id) {
  */
 TableIterator TableHeap::Begin(Txn *txn) {
     page_id_t pid = first_page_id_;
+    // cout << "TableHeap::Begin: first_page_id_ = " << first_page_id_ << endl;
     // 遍历链表中所有页面，找到第一个有 tuple 的位置
     while (pid != INVALID_PAGE_ID) {
-      auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(pid));
-      if (page == nullptr) {
+    auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(pid));
+    // cout << "TableHeap::Begin: Fetching page with id = " << pid << endl;
+    if (page == nullptr) {
         break;  // 无法取到页，直接退出
-      }
-      // 锁住页面，找第一个 tuple
-      page->RLatch();
-      RowId first_rid;
-      bool ok = page->GetFirstTupleRid(&first_rid);
-      page->RUnlatch();
-      // 释放页面引用，不标记脏
-      buffer_pool_manager_->UnpinPage(pid, /*is_dirty=*/false);
+    }
+    // 锁住页面，找第一个 tuple
+    page->RLatch();
+    RowId first_rid;
+    bool ok = page->GetFirstTupleRid(&first_rid);
+    // cout << "TableHeap::Begin: GetFirstTupleRid returned " << ok  << endl;
+    page->RUnlatch();
+    // 释放页面引用，不标记脏
+    buffer_pool_manager_->UnpinPage(pid, /*is_dirty=*/false);
 
-      if (ok && first_rid.Get() != INVALID_ROWID.Get()) {
+    if (ok) {
         // 找到合法的 tuple，返回指向它的迭代器
         return TableIterator(this, first_rid, txn);
-      }
-      // 否则跳到下一页继续
-      pid = page->GetNextPageId();
+    }
+    // 否则跳到下一页继续
+    pid = page->GetNextPageId();
     }
     // 整个表都没有 tuple，返回 end()
     return End();

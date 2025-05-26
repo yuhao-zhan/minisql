@@ -6,11 +6,16 @@
 /**
  * TODO: Student Implement
  */
-TableIterator::TableIterator(TableHeap *table_heap, RowId rid, Txn *txn): table_heap_(table_heap), rid_(rid), txn_(txn) {
+TableIterator::TableIterator(TableHeap *table_heap, RowId rid, Txn *txn)
+        : table_heap_(table_heap), rid_(rid), txn_(txn) {
     // 如果是合法的开始迭代位置，就把这一行 load 进 cur_row_
     if (table_heap_ != nullptr && rid_.GetPageId() != INVALID_PAGE_ID) {
+        cur_row_ = Row();
+        // —— 先给 cur_row_ 设上正确的 RowId ——
+        cur_row_.SetRowId(rid_);
         auto page = reinterpret_cast<TablePage *>(
                 table_heap_->buffer_pool_manager_->FetchPage(rid_.GetPageId()));
+        // // std::cout << "TableIterator::TableIterator: rid_ = " << rid_.GetPageId() << std::endl;
         if (page != nullptr) {
             page->RLatch();
             bool ok = page->GetTuple(&cur_row_, table_heap_->schema_, txn_,
@@ -78,15 +83,19 @@ TableIterator &TableIterator::operator=(const TableIterator &itr) noexcept {
 }
 
 // ++iter
-TableIterator &TableIterator::operator++() {
-    if (table_heap_ == nullptr) return *this;  // 已经是 end()
+// storage/table_iterator.cpp
 
-    // 1) 同页内找下一个 slot
+TableIterator &TableIterator::operator++() {
+    // 如果已经是 end()，直接返回
+    if (table_heap_ == nullptr) {
+        return *this;
+    }
+
+    // 1) 本页内尝试找下一个 slot
     RowId next_rid;
+    bool found = false;
     auto page = reinterpret_cast<TablePage *>(
             table_heap_->buffer_pool_manager_->FetchPage(rid_.GetPageId()));
-    // 先尝试在当前页中找下一个 tuple
-    bool found = false;
     if (page) {
         page->RLatch();
         found = page->GetNextTupleRid(rid_, &next_rid);
@@ -94,13 +103,15 @@ TableIterator &TableIterator::operator++() {
         table_heap_->buffer_pool_manager_->UnpinPage(rid_.GetPageId(), false);
     }
 
+    // 2) 如果本页没找到，沿 “next page” 链找第一个非删除 tuple
     if (!found) {
-        // 2) 跳到链表中下一个有 tuple 的页面
         page_id_t pid = page ? page->GetNextPageId() : INVALID_PAGE_ID;
         while (pid != INVALID_PAGE_ID) {
             auto p = reinterpret_cast<TablePage *>(
                     table_heap_->buffer_pool_manager_->FetchPage(pid));
-            if (!p) break;
+            if (!p) {
+                break;
+            }
             RowId first_rid;
             p->RLatch();
             bool ok = p->GetFirstTupleRid(&first_rid);
@@ -115,30 +126,29 @@ TableIterator &TableIterator::operator++() {
         }
     }
 
-    if (found) {
-        // 3) 载入 next_rid 对应的行
-        rid_ = next_rid;
-        auto np = reinterpret_cast<TablePage *>(
-                table_heap_->buffer_pool_manager_->FetchPage(rid_.GetPageId()));
-
-        bool ok = false;
-        if (np != nullptr) {
-          np->RLatch();
-          ok = np->GetTuple(&cur_row_, table_heap_->schema_, txn_, table_heap_->lock_manager_);
-          np->RUnlatch();
-          table_heap_->buffer_pool_manager_->UnpinPage(rid_.GetPageId(), false);
-        }
-        if (!ok) {
-            return ++(*this);
-        }
-    } else {
-        // 4) 没有下一个了 → 到达 end()
+    // 3) 如果确实没找到，下沉到 end()
+    if (!found) {
         table_heap_ = nullptr;
-        rid_        = RowId();
+        rid_        = RowId();   // 默认就是 INVALID_PAGE_ID, 0
         txn_        = nullptr;
+        return *this;
+    }
+
+    // 4) 找到了 next_rid，再去加载那一行
+    rid_     = next_rid;
+    cur_row_ = Row();
+    cur_row_.SetRowId(rid_);
+    auto np = reinterpret_cast<TablePage *>(
+            table_heap_->buffer_pool_manager_->FetchPage(rid_.GetPageId()));
+    if (np) {
+        np->RLatch();
+        np->GetTuple(&cur_row_, table_heap_->schema_, txn_, table_heap_->lock_manager_);
+        np->RUnlatch();
+        table_heap_->buffer_pool_manager_->UnpinPage(rid_.GetPageId(), false);
     }
     return *this;
 }
+
 
 // iter++
 TableIterator TableIterator::operator++(int) {

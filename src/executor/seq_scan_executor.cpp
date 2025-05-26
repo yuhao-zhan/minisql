@@ -28,28 +28,39 @@ bool SeqScanExecutor::SchemaEqual(const Schema *table_schema, const Schema *outp
 
 void SeqScanExecutor::TupleTransfer(const Schema *table_schema, const Schema *output_schema, const Row *row,
                                     Row *output_row) {
+    // cout << "SeqScanExecutor::TupleTransfer()" << endl;
   const auto &output_columns = output_schema->GetColumns();
   std::vector<Field> dest_row;
   dest_row.reserve(output_columns.size());
   for (const auto column : output_columns) {
     auto idx = column->GetTableInd();
     dest_row.emplace_back(*row->GetField(idx));
+    // cout << "SeqScanExecutor::TupleTransfer() dest_row "  << endl;
   }
   *output_row = Row(dest_row);
+//    cout << "SeqScanExecutor::TupleTransfer() output_row " << output_row->GetRowId().GetPageId() << ", "
+//         << output_row->GetRowId().GetSlotNum() << endl;
 }
 
 void SeqScanExecutor::Init() {
+  //  cout << "SeqScanExecutor::Init()" << endl;
   exec_ctx_->GetCatalog()->GetTable(plan_->GetTableName(), table_info_);
-  auto first_row = table_info_->GetTableHeap()->Begin(nullptr);
+  cout << "SeqScanExecutor::Init() table_info_ " << endl;
+  auto first_row = table_info_->GetTableHeap()->Begin(exec_ctx_->GetTransaction());
+//  cout << "SeqScanExecutor::Init() first_row " << first_row->GetRowId().GetPageId() << ", "
+//       << first_row->GetRowId().GetSlotNum() << endl;
   iterator_ = (table_info_->GetTableHeap()->Begin(exec_ctx_->GetTransaction()));
   schema_ = plan_->OutputSchema();
   is_schema_same_ = SchemaEqual(table_info_->GetSchema(), schema_);
 }
 
 bool SeqScanExecutor::Next(Row *row, RowId *rid) {
+   // cout << "SeqScanExecutor::Next()" << endl;
   auto predicate = plan_->GetPredicate();
   auto table_schema = table_info_->GetSchema();
   while (iterator_ != table_info_->GetTableHeap()->End()) {
+//      cout << "SeqScanExecutor::Next() iterator_ " << iterator_->GetRowId().GetPageId() << ", "
+//           << iterator_->GetRowId().GetSlotNum() << endl;
     auto p_row = &(*iterator_);
     if (predicate != nullptr) {
       if (!predicate->Evaluate(p_row).CompareEquals(Field(kTypeInt, 1))) {
@@ -63,7 +74,11 @@ bool SeqScanExecutor::Next(Row *row, RowId *rid) {
     } else {
       *row = *p_row;
     }
-    iterator_++;
+      row->SetRowId(*rid);
+
+      iterator_++;
+//    cout << "SeqScanExecutor::Next() row " << row->GetRowId().GetPageId() << ", "
+//         << row->GetRowId().GetSlotNum() << endl;
     return true;
   }
   return false;

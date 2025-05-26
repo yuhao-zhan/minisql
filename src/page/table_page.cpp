@@ -31,36 +31,40 @@ void TablePage::Init(page_id_t page_id, page_id_t prev_id, LogManager *log_mgr, 
     SetTupleCount(0);
 }
 
-bool TablePage::InsertTuple(Row &row, Schema *schema, Txn *txn, LockManager *lock_manager, LogManager *log_manager) {
-  uint32_t serialized_size = row.GetSerializedSize(schema);
-  ASSERT(serialized_size > 0, "Can not have empty row.");
-  if (GetFreeSpaceRemaining() < serialized_size + SIZE_TUPLE) {
-    return false;
-  }
-  // Try to find a free slot to reuse.
-  uint32_t i;
-  for (i = 0; i < GetTupleCount(); i++) {
-    // If the slot is empty, i.e. its tuple has size 0,
-    if (GetTupleSize(i) == 0) {
-      // Then we break out of the loop at index i.
-      break;
-    }
-  }
-  // Otherwise we claim available free space..
-  SetFreeSpacePointer(GetFreeSpacePointer() - serialized_size);
-  uint32_t __attribute__((unused)) write_bytes = row.SerializeTo(GetData() + GetFreeSpacePointer(), schema);
-  ASSERT(write_bytes == serialized_size, "Unexpected behavior in row serialize.");
 
-  // Set the tuple.
-  SetTupleOffsetAtSlot(i, GetFreeSpacePointer());
-  SetTupleSize(i, serialized_size);
-  // Set rid
-  row.SetRowId(RowId(GetTablePageId(), i));
-  if (i == GetTupleCount()) {
-    SetTupleCount(GetTupleCount() + 1);
-  }
-  return true;
+bool TablePage::InsertTuple(Row &row, Schema *schema, Txn *txn,
+                            LockManager *lock_manager, LogManager *log_manager) {
+    // 1. 序列化前先算大小
+    uint32_t serialized_size = row.GetSerializedSize(schema);
+    ASSERT(serialized_size > 0, "Can not have empty row.");
+    if (GetFreeSpaceRemaining() < serialized_size + SIZE_TUPLE) {
+        return false;
+    }
+
+    // 2. 找到一个空 slot 或准备新空间
+    uint32_t i;
+    for (i = 0; i < GetTupleCount(); i++) {
+        if (GetTupleSize(i) == 0) break;
+    }
+
+    // 3. **先更新 row 的 RowId**（一定要在序列化前！）
+    RowId new_rid(GetTablePageId(), i);
+    row.SetRowId(new_rid);
+
+    // 4. 写入内容
+    SetFreeSpacePointer(GetFreeSpacePointer() - serialized_size);
+    uint32_t write_bytes = row.SerializeTo(GetData() + GetFreeSpacePointer(), schema);
+    ASSERT(write_bytes == serialized_size, "Unexpected behavior in row serialize.");
+
+    // 5. 更新 slot 元数据
+    SetTupleOffsetAtSlot(i, GetFreeSpacePointer());
+    SetTupleSize(i, serialized_size);
+    if (i == GetTupleCount()) {
+        SetTupleCount(GetTupleCount() + 1);
+    }
+    return true;
 }
+
 
 bool TablePage::MarkDelete(const RowId &rid, Txn *txn, LockManager *lock_manager, LogManager *log_manager) {
   uint32_t slot_num = rid.GetSlotNum();
@@ -162,16 +166,7 @@ void TablePage::RollbackDelete(const RowId &rid, Txn *txn, LogManager *log_manag
 }
 
 bool TablePage::GetTuple(Row *row, Schema *schema, Txn *txn, LockManager *lock_manager) {
-  // 添加调试信息
-  std::cout << "GetTuple called with row: " << (row ? "not null" : "null") 
-            << ", rowid: " << row->GetRowId().Get() << std::endl;
-  std::cout << "GetTuple called with schema: " << (schema ? "not null" : "null") 
-            << ", schemaid: " << std::endl;
-  std::cout << "GetTuple called with txn: " << (txn ? "not null" : "null") 
-            << ", txnid: " << std::endl;
-  std::cout << "GetTuple called with lock_manager: " << (lock_manager ? "not null" : "null") 
-            << ", lock_managerid: " << std::endl;
-
+   // std::cout << "GetTuple called with row: " << row->GetRowId().GetPageId() << ", " << row->GetRowId().GetSlotNum() << std::endl;
   ASSERT(row != nullptr && row->GetRowId().Get() != INVALID_ROWID.Get(), "Invalid row.");
   // Get the current slot number.
   uint32_t slot_num = row->GetRowId().GetSlotNum();
@@ -187,6 +182,7 @@ bool TablePage::GetTuple(Row *row, Schema *schema, Txn *txn, LockManager *lock_m
   }
   // At this point, we have at least a shared lock on the RID. Copy the tuple data into our result.
   uint32_t tuple_offset = GetTupleOffsetAtSlot(slot_num);
+  // std::cout << "GetTuple: tuple_offset = " << tuple_offset << ", tuple_size = " << tuple_size << std::endl;
   uint32_t __attribute__((unused)) read_bytes = row->DeserializeFrom(GetData() + tuple_offset, schema);
   ASSERT(tuple_size == read_bytes, "Unexpected behavior in tuple deserialize.");
   return true;

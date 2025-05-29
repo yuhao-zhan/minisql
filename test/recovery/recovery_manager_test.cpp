@@ -39,9 +39,12 @@ TEST_F(RecoveryManagerTest, RecoveryTest) {
   ASSERT_EQ(d4->lsn_, d5->prev_lsn_);
 
   auto d6 = CreateUpdateLog(0, "C", 600, "C", 700);  // <T0, C, 600, 700>
+  auto d6_1 = CreateUpdateLog(0, "C", 700, "C", 600);  // <T0, C, 700, 600>
+  auto d2_1 = CreateInsertLog(0, "B", 1000);  // <T0, B, -, 1000>
+  auto d1_1 = CreateUpdateLog(0, "A", 2050, "A", 2000);  // <T0, A, 2050, 2000>
   auto d7 = CreateAbortLog(0);                       // <T0, Abort>
   ASSERT_EQ(d2->lsn_, d6->prev_lsn_);
-  ASSERT_EQ(d6->lsn_, d7->prev_lsn_);
+  ASSERT_EQ(d6->lsn_, d6_1->prev_lsn_);
 
   auto d8 = CreateBeginLog(2);                        // <T2 Start>
   auto d9 = CreateInsertLog(2, "D", 30000);           // <T2, D, -, 30000>
@@ -50,7 +53,7 @@ TEST_F(RecoveryManagerTest, RecoveryTest) {
   ASSERT_EQ(d8->lsn_, d9->prev_lsn_);
   ASSERT_EQ(d9->lsn_, d10->prev_lsn_);
 
-  std::vector<LogRecPtr> logs = {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10};
+  std::vector<LogRecPtr> logs = {d0, d1, d2, d3, d4, d5, d6, d6_1, d2_1, d1_1, d7, d8, d9, d10};
 
   RecoveryManager recovery_mgr;
   recovery_mgr.Init(checkpoint);

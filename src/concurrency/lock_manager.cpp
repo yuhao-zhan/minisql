@@ -386,31 +386,22 @@ void LockManager::DeleteNode(txn_id_t txn_id) {
  * TODO: Student Implement
  */
 void LockManager::RunCycleDetection() {
-    std::thread([this]() {
+   cycle_detection_thread_ = std::thread([this]() {
         while (enable_cycle_detection_) {
-            // 1. 休眠到下次检测时刻
             std::this_thread::sleep_for(cycle_detection_interval_);
-
-            // 2. 在互斥下执行环路检测
             txn_id_t victim_tid = INVALID_TXN_ID;
             {
                 std::lock_guard<std::mutex> guard(latch_);
-                if (!HasCycle(victim_tid)) {
-                    continue;  // 本次无死锁，下一轮
-                }
-                // 找到了环，先从 waits-for 图里删除该节点，避免重复检测
+                if (!HasCycle(victim_tid)) continue;
                 DeleteNode(victim_tid);
             }
-
-            // 3. 环外调用事务管理器中止该事务
             if (txn_mgr_) {
-                Txn *victim = txn_mgr_->GetTransaction(victim_tid);
-                if (victim) {
+                if (auto *victim = txn_mgr_->GetTransaction(victim_tid)) {
                     txn_mgr_->Abort(victim);
                 }
             }
         }
-    }).detach();
+    }); 
 }
 
 /**

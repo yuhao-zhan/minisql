@@ -11,7 +11,6 @@ bool BitmapPage<PageSize>::AllocatePage(uint32_t &page_offset) {
     auto max_size = GetMaxSupportedSize();
 
     if (page_allocated_ == max_size) {
-        LOG(WARNING) << "No space in the bitmap!";
         return false;
     }
 
@@ -48,7 +47,6 @@ bool BitmapPage<PageSize>::DeAllocatePage(uint32_t page_offset) {
     }
 
     if (IsPageFree(page_offset)) {
-        LOG(WARNING) << "Double deallocate!";
         return false;
     }
 

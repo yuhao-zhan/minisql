@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <atomic>
 #include <condition_variable>
+#include <thread>
 #include <list>
 #include <mutex>
 #include <set>
@@ -94,7 +95,12 @@ public:
 public:
     LockManager() = default;
 
-    ~LockManager() = default;
+    ~LockManager() {
+      DisableCycleDetection();
+      if (cycle_detection_thread_.joinable()) {
+        cycle_detection_thread_.join();
+      }
+    }
 
     void SetTxnMgr(TxnManager *txn_mgr);
 
@@ -184,6 +190,7 @@ private:
     std::atomic<bool> enable_cycle_detection_{false};
     std::chrono::milliseconds cycle_detection_interval_{100};
     TxnManager *txn_mgr_{nullptr};
+    std::thread cycle_detection_thread_;
 };
 
 #endif  // MINISQL_LOCK_MANAGER_H

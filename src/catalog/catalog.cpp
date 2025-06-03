@@ -290,9 +290,6 @@ dberr_t CatalogManager::CreateIndex(const std::string &table_name, const string 
     // 5) 创建索引信息
     index_info = IndexInfo::Create();
     index_info->Init(idx_meta, table_info, buffer_pool_manager_);
-
-
-
     // 6) 将索引信息保存到 maps
     indexes_[index_id] = index_info;
     index_names_[table_name][index_name] = index_id;
@@ -305,6 +302,28 @@ dberr_t CatalogManager::CreateIndex(const std::string &table_name, const string 
     catalog_meta_->GetIndexMetaPages()->emplace(index_id, page_id);
     // 9) 更新 catalog_meta_ 页
     FlushCatalogMetaPage();
+
+    TableHeap *table_heap = table_info->GetTableHeap();
+    // 取得只包含 index_keys 列的 key_schema
+    IndexSchema *key_schema = index_info->GetIndexKeySchema();
+    // 原表完整的 schema
+    const Schema *orig_schema = table_info->GetSchema();
+
+    for (TableIterator it_table = table_heap->Begin(txn);
+         it_table != table_heap->End();
+         ++it_table) {
+        // operator*() 返回当前行的 Row
+        Row table_row = *it_table;
+        RowId rid = table_row.GetRowId();
+
+        // 用 Row::GetKeyFromRow 从整行 table_row 中抽出 key_schema 对应的那些列，生成一个新的 Row key_row
+        Row key_row;  // 空的 Row，用来存放“索引列”那几列
+        table_row.GetKeyFromRow(orig_schema, key_schema, key_row);
+
+        // 把 (key_row, rid) 插入到 B+ 树里
+        index_info->GetIndex()->InsertEntry(key_row, rid, txn);
+    }
+
     // 10) 返回索引信息
     return DB_SUCCESS;
 }

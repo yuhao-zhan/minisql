@@ -51,11 +51,24 @@ dberr_t BPlusTreeIndex::InsertEntry(const Row &key, RowId row_id, Txn *txn) {
 }
 
 dberr_t BPlusTreeIndex::RemoveEntry(const Row &key, RowId row_id, Txn *txn) {
-  GenericKey *index_key = processor_.InitKey();
-  processor_.SerializeFromKey(index_key, key, key_schema_);
+    if (container_.IsEmpty()) {
+        // 如果根本就是空树，说明前面已经删除过最后一条；直接跳过
+        return DB_KEY_NOT_FOUND;
+    }
 
-  container_.Remove(index_key, txn);
-  free(index_key);
+    Row key_with_rid = key;
+    key_with_rid.SetRowId(row_id);
+
+    // 2. 生成 GenericKey
+    GenericKey *index_key = processor_.InitKey();
+    processor_.SerializeFromKey(index_key, key_with_rid, key_schema_);
+
+    // 3. 调用底层容器的 Remove 或 DeleteEntry 接口
+    //    这里不改 container_.Remove 的签名，但由于 key 里已经带了 row_id，
+    //    它会在叶节点里精确匹配并删除对应的 <key, row_id> 项
+    container_.Remove(index_key, txn);
+
+    free(index_key);
   return DB_SUCCESS;
 }
 

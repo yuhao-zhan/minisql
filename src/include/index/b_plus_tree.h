@@ -38,7 +38,7 @@ class BPlusTree {
   // Remove a key and its value from this B+ tree.
   void Remove(const GenericKey *key, Txn *transaction = nullptr);
 
-  // return the value associated with a given key
+    // return the value associated with a given key
   bool GetValue(const GenericKey *key, std::vector<RowId> &result, Txn *transaction = nullptr);
 
   IndexIterator Begin();

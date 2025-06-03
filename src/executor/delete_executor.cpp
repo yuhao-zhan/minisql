@@ -17,11 +17,13 @@ void DeleteExecutor::Init() {
 
 bool DeleteExecutor::Next([[maybe_unused]] Row *row, RowId *rid) {
   if (child_executor_->Next(row, rid)) {
+      cout << "Deleting row with RID: " << rid << endl;
     if (!table_info_->GetTableHeap()->MarkDelete(*rid, txn_)) {
       return false;
     }
     Row key_row;
     for (auto info : index_info_) {  // 更新索引
+        // cout << "Deleting from index: " << info->GetIndexName() << endl;
       row->GetKeyFromRow(table_info_->GetSchema(), info->GetIndexKeySchema(), key_row);
       info->GetIndex()->RemoveEntry(key_row, *rid, txn_);
     }

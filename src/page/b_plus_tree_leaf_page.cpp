@@ -215,23 +215,22 @@ bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM)
  * @return  page size after deletion
  */
 int LeafPage::RemoveAndDeleteRecord(const GenericKey *key, const KeyManager &KM) {
-    // 找到第一个 大于/等于 键的索引
-    int index = KeyIndex(key, KM);
-
-    // 看看是否存在相同的键
-    if (KM.CompareKeys(KeyAt(index), key) != 0) {
-        return -1; // 没有找到键
+    int total = GetSize();
+    for (int i = 0; i < total; i++) {
+        // KeyAt(i) 会解出存储在第 i 个 slot 上的 GenericKey（其中也包含 row_id）
+        if (KM.CompareKeys(KeyAt(i), key) == 0) {
+            // 找到“列值+row_id”都相同的那一条，才真正删除
+            memmove(pairs_off + i * pair_size,
+                    pairs_off + (i + 1) * pair_size,
+                    (total - i - 1) * pair_size);
+            SetSize(total - 1);
+            return GetSize();
+        }
     }
-
-    // 删除键值对
-    memmove(pairs_off + index * pair_size, pairs_off + (index + 1) * pair_size,
-            (GetSize() - index - 1) * pair_size);
-
-    // 更新页大小
-    SetSize(GetSize() - 1);
-
-    return GetSize();
+    // 如果全部遍历后都没匹配成功，就返回 -1
+    return -1;
 }
+
 
 /*****************************************************************************
  * MERGE

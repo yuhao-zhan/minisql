@@ -522,9 +522,11 @@ void BPlusTree::Remove(const GenericKey *key, Txn *transaction) {
     int deleted_cnt = leaf->RemoveAndDeleteRecord(key, processor_);
     if (deleted_cnt <= 0) {
         // key 不存在，无需修改
+        // cout << "Key not found in leaf page: " << leaf_page_id << endl;
         buffer_pool_manager_->UnpinPage(leaf_page_id, /*is_dirty=*/false);
         return;
     }
+    // cout << "Deleted  a record from leaf page: " << leaf_page_id << endl;
 
     // 4. 如果叶子页是根节点
     if (leaf->IsRootPage()) {

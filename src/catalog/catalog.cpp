@@ -181,6 +181,38 @@ dberr_t CatalogManager::CreateTable(const string &table_name,
     // 8) persist the updated catalog‐meta
     FlushCatalogMetaPage();
 
+    // ───────────────────────────────────────────────
+    // 9) For each column in the schema that is declared UNIQUE, create a single‐column index
+    //
+    //    We assume your Column class has a method bool IsUnique() or similar.
+    //    We also assume the “index_name” convention can be: tableName_columnName_uqidx.
+    //
+    auto copied_schema = table_info->GetSchema();  // this is the deep copy
+    for (uint32_t col_idx = 0; col_idx < copied_schema->GetColumnCount(); col_idx++) {
+        const Column *col = copied_schema->GetColumn(col_idx);
+        if (col->IsUnique()) {
+            // build a vector with exactly this column index
+            std::vector<std::string> key_columns{col->GetName()};
+            std::string            unique_index_name =
+                    table_name + "_" + col->GetName() + "_uqidx";
+
+            IndexInfo *dummy_idx_info = nullptr;
+            dberr_t   result = CreateIndex(
+                    table_name,                // existing table
+                    unique_index_name,         // “table_col_uqidx”
+                    key_columns,               // just { columnName }
+                    txn,                       // same transaction
+                    dummy_idx_info,            // out parameter
+                    "BPlusTree");              // or whatever index‐type you default to
+            if (result != DB_SUCCESS) {
+                // In a real implementation, you might choose to rollback table creation
+                LOG(ERROR) << "Failed to create UNIQUE index on column "
+                           << col->GetName() << " of table " << table_name;
+                return result;
+            }
+        }
+    }
+
     return DB_SUCCESS;
 }
 

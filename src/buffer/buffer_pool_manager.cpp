@@ -143,7 +143,7 @@ bool BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty) {
     // ASSERT(page.pin_count_ > 0, "Page Not Pinned!");
     // 如果已经没有 pin，就直接返回 false（或者根据你想要的语义返回 true）
     if (page.pin_count_ == 0) {
-        LOG(WARNING) << "UnpinPage called on already-unpinned page " << page_id;
+        // LOG(WARNING) << "UnpinPage called on already-unpinned page " << page_id;
         return false;
     }
 

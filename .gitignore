@@ -7,3 +7,4 @@ datas/
 cmake-build-debug/
 cmake-build-release/
 .cache
+sql_gen/

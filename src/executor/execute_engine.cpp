@@ -5,6 +5,7 @@
 #include <sys/types.h>
 
 #include <chrono>
+#include <filesystem>
 
 #include "common/result_writer.h"
 #include "executor/executors/delete_executor.h"
@@ -206,7 +207,7 @@ dberr_t ExecuteEngine::Execute(pSyntaxNode ast) {
     } else {
         writer.EndInformation(result_set.size(), duration_time, false);
     }
-    // std::cout << writer.stream_.rdbuf();
+    std::cout << writer.stream_.rdbuf();
     // todo:: use shared_ptr for schema
     if (ast->type_ == kNodeSelect)
         delete planner.plan_->OutputSchema();
@@ -368,7 +369,7 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode ast, ExecuteContext *conte
     std::vector<string> column_type_strs;
     std::vector<uint32_t> lengths;
     std::vector<bool> uniques;
-    std::set<string> primarys;
+    std::string primary_name;
 
     auto column_definition_list = ast->child_->next_;
 
@@ -388,7 +389,8 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode ast, ExecuteContext *conte
                 lengths.push_back(0);
             }
 
-            if (column->val_ == "u") {
+            string unique = "unique";
+            if (column->val_ != nullptr && column->val_ == unique) {
                 uniques.push_back(1);
             } else {
                 uniques.push_back(0);
@@ -396,7 +398,7 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode ast, ExecuteContext *conte
 
         } else if (column->type_ == kNodeColumnList) {
             for (auto primary_key = column->child_; primary_key != nullptr; primary_key = primary_key->next_) {
-                primarys.insert(primary_key->val_);
+                primary_name = primary_key->val_;
             }
         } else {
             std::cerr << "Invaild SyntaxNode" << std::endl;
@@ -407,7 +409,8 @@ dberr_t ExecuteEngine::ExecuteCreateTable(pSyntaxNode ast, ExecuteContext *conte
     for (auto i = 0; i < column_names.size(); i++) {
 
         bool nullable = true;
-        if (primarys.find(column_names[i]) != primarys.end()) {
+        if (primary_name == column_names[i]) {
+            uniques[i] = 1;
             nullable = false;
         }
 
@@ -582,6 +585,11 @@ dberr_t ExecuteEngine::ExecuteExecfile(pSyntaxNode ast, ExecuteContext *context)
     LOG(INFO) << "ExecuteExecfile" << std::endl;
 #endif
     string filename = ast->child_->val_;
+    if (!std::filesystem::exists(filename)) {
+        LOG(ERROR) << "File not found: " << filename << std::endl;
+        return DB_FAILED;
+    }
+
     std::ifstream file(filename);
     if (!file.is_open()) return DB_FAILED;
 

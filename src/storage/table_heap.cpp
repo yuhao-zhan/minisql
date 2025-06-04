@@ -71,6 +71,7 @@ bool TableHeap::UpdateTuple(Row &new_row, const RowId &rid, Txn *txn) {
     auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(pid));
     if (page == nullptr) {
         return false;
+
     }
 
     // —— 第一步，用 old_row 读取旧值，确保这个行存在 ——
@@ -85,6 +86,7 @@ bool TableHeap::UpdateTuple(Row &new_row, const RowId &rid, Txn *txn) {
         return false;
     }
 
+    new_row.SetRowId(rid);
     // —— 关键：要给 page->UpdateTuple 一个空 fields_ 的 Row ——
     Row fresh_row_for_update;
     fresh_row_for_update.SetRowId(rid);
@@ -105,7 +107,7 @@ bool TableHeap::UpdateTuple(Row &new_row, const RowId &rid, Txn *txn) {
     }
 
     // 更新成功，恢复 new_row 的 RowId
-    new_row.SetRowId(rid);
+    // new_row.SetRowId(rid);
     return true;
 }
 
@@ -156,19 +158,14 @@ bool TableHeap::GetTuple(Row *row, Txn *txn) {
 }
 
 void TableHeap::DeleteTable(page_id_t page_id) {
-    auto next_page_id = first_page_id_;
-    while (next_page_id != INVALID_PAGE_ID) {
-        auto old_page_id = next_page_id;
-        // // cout << "Deleting page: " << old_page_id << endl;
-        auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(old_page_id));
-        assert(page != nullptr);
-        next_page_id = page->GetNextPageId();
-        // cout << "Next page: " << next_page_id << endl;
-        buffer_pool_manager_->UnpinPage(old_page_id, false);
-        buffer_pool_manager_->DeletePage(old_page_id);
-    }
     if (page_id != INVALID_PAGE_ID) {
+        auto temp_table_page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(page_id));  // 删除table_heap
+        if (temp_table_page->GetNextPageId() != INVALID_PAGE_ID)
+            DeleteTable(temp_table_page->GetNextPageId());
+        buffer_pool_manager_->UnpinPage(page_id, false);
         buffer_pool_manager_->DeletePage(page_id);
+    } else {
+        DeleteTable(first_page_id_);
     }
 }
 

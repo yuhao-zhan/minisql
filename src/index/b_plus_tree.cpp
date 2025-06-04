@@ -505,6 +505,7 @@ void BPlusTree::InsertIntoParent(BPlusTreePage *old_node, GenericKey *key, BPlus
  * necessary.
  */
 void BPlusTree::Remove(const GenericKey *key, Txn *transaction) {
+    cout << "Key to remove: " << key << endl;
     // 1. 空树直接返回
     if (IsEmpty()) {
         return;
@@ -512,6 +513,7 @@ void BPlusTree::Remove(const GenericKey *key, Txn *transaction) {
 
     // 2. 定位到叶子页并 pin
     Page *page = FindLeafPage(key);
+    cout << "FindLeafPage: " << page->GetPageId() << endl;
     if (page == nullptr) {
         return;
     }

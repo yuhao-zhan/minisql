@@ -17,7 +17,7 @@ void DeleteExecutor::Init() {
 
 bool DeleteExecutor::Next([[maybe_unused]] Row *row, RowId *rid) {
   if (child_executor_->Next(row, rid)) {
-      cout << "Deleting row with RID: " << rid << endl;
+      //cout << "Deleting row with RID: " << rid << endl;
     if (!table_info_->GetTableHeap()->MarkDelete(*rid, txn_)) {
       return false;
     }

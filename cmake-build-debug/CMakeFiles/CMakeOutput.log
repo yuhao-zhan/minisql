@@ -1,0 +1,13 @@
+Determining the gflags namespace passed with the following output:
+Change Dir: '/Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/CMakeFiles/CMakeTmp'
+
+Run Build Command(s): /opt/homebrew/Cellar/cmake/3.29.3/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_34cdd/fast
+/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_34cdd.dir/build.make CMakeFiles/cmTC_34cdd.dir/build
+Building CXX object CMakeFiles/cmTC_34cdd.dir/DetermineGflagsNamespace.cxx.o
+/Library/Developer/CommandLineTools/usr/bin/c++ -DGFLAGS_IS_A_DLL=0 -DGLOG_GFLAGS_NAMESPACE=gflags -isystem /opt/anaconda3/include -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX14.2.sdk -fPIE -MD -MT CMakeFiles/cmTC_34cdd.dir/DetermineGflagsNamespace.cxx.o -MF CMakeFiles/cmTC_34cdd.dir/DetermineGflagsNamespace.cxx.o.d -o CMakeFiles/cmTC_34cdd.dir/DetermineGflagsNamespace.cxx.o -c /Users/zhanyuxiao/Desktop/Class_materials/database/labs/minisql/cmake-build-debug/CMakeFiles/CMakeTmp/DetermineGflagsNamespace.cxx
+Linking CXX executable cmTC_34cdd
+/opt/homebrew/Cellar/cmake/3.29.3/bin/cmake -E cmake_link_script CMakeFiles/cmTC_34cdd.dir/link.txt --verbose=1
+/Library/Developer/CommandLineTools/usr/bin/c++ -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX14.2.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/cmTC_34cdd.dir/DetermineGflagsNamespace.cxx.o -o cmTC_34cdd  -Wl,-rpath,/opt/anaconda3/lib /opt/anaconda3/lib/libgflags.2.2.2.dylib
+
+
+
